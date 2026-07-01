@@ -1,0 +1,11 @@
+# Development dependencies. Installs everything in requirements.txt, plus tooling that
+# is NOT needed to run the deployed dashboard (tests, linting, notebooks, fetch helpers).
+#   pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+pytest>=8.0
+ruff>=0.4
+jupyter>=1.0
+matplotlib>=3.8      # optional, exploration notebooks only
+requests>=2.31       # optional, for future API fetch helpers (not on the V1 critical path)

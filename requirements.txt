@@ -1,0 +1,13 @@
+# Runtime dependencies (this file is the deploy manifest, e.g. for Streamlit Cloud).
+# `-e .` installs THIS project (see pyproject.toml) in editable mode so `import src...`
+# works from the project root and on Streamlit Cloud. The `.` is relative to the folder
+# that contains this file (the project root), NOT the parent directory.
+
+pandas>=2.0
+numpy>=1.24
+plotly>=5.18
+streamlit>=1.30
+sqlalchemy>=2.0
+python-dotenv>=1.0
+
+-e .

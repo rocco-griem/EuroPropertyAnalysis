@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "europropertyanalysis"
+version = "0.1.0"
+description = "Historical residential property market analysis across European capitals (2015 onward)."
+requires-python = ">=3.10"
+# NOTE: runtime dependencies are declared in requirements.txt (the deploy manifest) to keep
+# a single source of truth and avoid drift. `pip install -e .` installs the package itself;
+# `pip install -r requirements.txt` installs the package AND its dependencies.
+
+[tool.setuptools.packages.find]
+# The importable top-level package is `src` (matches the spec's commands, e.g.
+# `python -m src.pipeline.run_pipeline`).
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
