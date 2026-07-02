@@ -1,1 +1,2 @@
-"""Database layer (SQLAlchemy models, connection, repository). Populated in a later milestone."""
+"""Database layer: SQLAlchemy models (`models.py`), engine/session management
+(`connection.py`), and query/upsert helpers (`repository.py`)."""
