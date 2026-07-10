@@ -34,7 +34,8 @@ def get_summary_table(session: Session) -> pd.DataFrame:
     """One row per city with whole-period aggregate metrics, for the comparison leaderboard.
 
     Columns: city, country, start_year, end_year, total_growth_pct, cagr_pct, volatility_pct,
-    risk_adjusted_return, avg_affordability_pressure_pct, capital_vs_national_gap_pct.
+    risk_adjusted_return, avg_affordability_pressure_pct, capital_vs_national_gap_pct,
+    data_quality_note (None unless the city's source is a methodological outlier).
     """
     columns = [
         "city",
@@ -47,6 +48,7 @@ def get_summary_table(session: Session) -> pd.DataFrame:
         "risk_adjusted_return",
         "avg_affordability_pressure_pct",
         "capital_vs_national_gap_pct",
+        "data_quality_note",
     ]
     rows = session.execute(
         select(
@@ -60,6 +62,7 @@ def get_summary_table(session: Session) -> pd.DataFrame:
             SummaryMetric.risk_adjusted_return,
             SummaryMetric.avg_affordability_pressure_pct,
             SummaryMetric.capital_vs_national_gap_pct,
+            City.data_quality_note,
         )
         .join(City, SummaryMetric.city_id == City.id)
         .join(Country, City.country_id == Country.id)

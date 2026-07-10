@@ -41,6 +41,10 @@ class City(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False)
+    # Set only for cities whose property index source is a methodological outlier (e.g. private/
+    # appraisal-based rather than an official transaction statistic) — surfaced in the dashboard
+    # so the caveat travels with the data instead of living only in docs/data_sources.md.
+    data_quality_note: Mapped[str | None] = mapped_column(Text)
 
     country: Mapped["Country"] = relationship(back_populates="cities")
 

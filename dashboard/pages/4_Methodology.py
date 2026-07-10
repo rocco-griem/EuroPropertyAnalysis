@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 
+from components import metric_cards
 from components.bootstrap import ensure_database
 from src.config import settings
 from src.database.connection import get_session
@@ -52,9 +53,10 @@ year.
 Currently showing **mock, hand-written placeholder data** ({current_cities}), used to prove the
 pipeline end-to-end (raw series → database → metrics → dashboard). Real national house-price,
 inflation, and income data will replace it in a later milestone. Cities are only included where a
-credible true city-level property index exists — national data alone is never substituted for a
-missing city series — and the final list (documented in `docs/data_sources.md`) may be fewer than
-the 10 originally targeted.
+credible city-level property index exists — national data alone is never substituted for a missing
+city series. Data-discovery research (documented in `docs/data_sources.md`) confirmed a source for
+all 10 originally targeted capitals, so none are excluded — one city, Madrid, is flagged below as
+a methodology outlier rather than dropped.
 
 ### Caveats
 
@@ -64,3 +66,5 @@ the 10 originally targeted.
   compares a city's property prices against its *national* income growth.
 """
 )
+
+metric_cards.render_data_quality_notes(summary_df)

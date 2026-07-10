@@ -38,10 +38,12 @@ def get_or_create_country(
     return country
 
 
-def get_or_create_city(session: Session, *, name: str, country: Country) -> City:
+def get_or_create_city(
+    session: Session, *, name: str, country: Country, data_quality_note: str | None = None
+) -> City:
     city = session.scalar(select(City).where(City.name == name, City.country_id == country.id))
     if city is None:
-        city = City(name=name, country=country)
+        city = City(name=name, country=country, data_quality_note=data_quality_note)
         session.add(city)
         session.flush()
     return city

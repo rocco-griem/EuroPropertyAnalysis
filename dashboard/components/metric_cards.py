@@ -25,3 +25,10 @@ def render_summary_cards(summary_df: pd.DataFrame) -> None:
     col2.metric(f"Highest CAGR — {best['city']}", f"{best['cagr_pct']:.1f}%")
     col3.metric(f"Lowest CAGR — {worst['city']}", f"{worst['cagr_pct']:.1f}%")
     col4.metric("Avg affordability pressure", f"{avg_affordability:.1f} pp")
+
+
+def render_data_quality_notes(summary_df: pd.DataFrame) -> None:
+    """Surface any per-city data-quality caveats (e.g. a private/appraisal-based source)."""
+    flagged = summary_df.dropna(subset=["data_quality_note"])
+    for _, row in flagged.iterrows():
+        st.caption(f"⚠️ **{row['city']}**: {row['data_quality_note']}")

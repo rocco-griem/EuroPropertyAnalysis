@@ -20,7 +20,12 @@ def seed_countries_and_cities() -> None:
                 iso_code=capital.iso_code,
                 currency_code=capital.currency_code,
             )
-            get_or_create_city(session, name=capital.city, country=country)
+            get_or_create_city(
+                session,
+                name=capital.city,
+                country=country,
+                data_quality_note=capital.data_quality_note,
+            )
 
 
 if __name__ == "__main__":

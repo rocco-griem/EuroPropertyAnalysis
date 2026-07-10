@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 
-from components import charts
+from components import charts, metric_cards
 from components.bootstrap import ensure_database
 from src.database.connection import get_session
 from src.services import analytics
@@ -47,3 +47,4 @@ else:
 
     st.subheader("Full metrics")
     st.dataframe(selected_summary_df, hide_index=True)
+    metric_cards.render_data_quality_notes(selected_summary_df)

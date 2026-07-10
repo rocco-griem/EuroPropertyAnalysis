@@ -55,3 +55,4 @@ st.plotly_chart(charts.property_index_line_chart(annual_df), width="stretch")
 
 st.subheader("Whole-period summary")
 st.dataframe(selected_summary_df, hide_index=True)
+metric_cards.render_data_quality_notes(selected_summary_df)

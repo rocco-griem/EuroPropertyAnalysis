@@ -56,16 +56,29 @@ class CapitalCity:
     country: str
     iso_code: str       # ISO 3166-1 alpha-2 (matches Eurostat geo codes; UK uses "UK")
     currency_code: str  # ISO 4217
+    # Set only when this city's property index source is a methodological outlier versus the
+    # rest of the set (e.g. a private/appraisal-based series rather than an official
+    # transaction statistic) — see docs/data_sources.md for the full per-city research.
+    data_quality_note: str | None = None
 
 
-# The 10 Version 1 target capitals. Final inclusion still depends on whether credible
-# city-level property data exists for each (decided at the data-discovery milestone), but
-# all 10 are attempted and documented before any exclusion.
+# The 10 Version 1 target capitals. Data-discovery milestone (see docs/data_sources.md)
+# confirmed a credible city-level property source for all 10, so none are excluded — Madrid's
+# source is flagged as the one methodology asymmetry in the set.
 CAPITALS: tuple[CapitalCity, ...] = (
     CapitalCity("London", "United Kingdom", "UK", "GBP"),
     CapitalCity("Paris", "France", "FR", "EUR"),
     CapitalCity("Berlin", "Germany", "DE", "EUR"),
-    CapitalCity("Madrid", "Spain", "ES", "EUR"),
+    CapitalCity(
+        "Madrid",
+        "Spain",
+        "ES",
+        "EUR",
+        data_quality_note=(
+            "Property index sourced from Tinsa IMIE Local Markets, a private, appraisal-based "
+            "series — not an official transaction statistic like the other cities here."
+        ),
+    ),
     CapitalCity("Lisbon", "Portugal", "PT", "EUR"),
     CapitalCity("Amsterdam", "Netherlands", "NL", "EUR"),
     CapitalCity("Vienna", "Austria", "AT", "EUR"),
