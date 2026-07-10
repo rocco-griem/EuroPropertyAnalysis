@@ -17,31 +17,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st
-from sqlalchemy import func, select
 
 from components import charts, metric_cards
-from src.database.connection import get_session, init_db
-from src.database.models import SummaryMetric
-from src.pipeline.mock_pipeline import run_mock_pipeline
+from components.bootstrap import ensure_database
+from src.database.connection import get_session
 from src.services import analytics
 
 st.set_page_config(page_title="EuroPropertyAnalysis", layout="wide")
-
-
-@st.cache_resource
-def ensure_database() -> None:
-    """Create tables and populate them with the M3 mock data if the database is empty.
-
-    `st.cache_resource` makes this run once per app process rather than on every widget
-    interaction/rerun. Real data (M7) will replace `run_mock_pipeline` here — the dashboard
-    code above this layer doesn't need to change.
-    """
-    init_db()
-    with get_session() as session:
-        row_count = session.execute(select(func.count()).select_from(SummaryMetric)).scalar_one()
-    if row_count == 0:
-        run_mock_pipeline()
-
 
 ensure_database()
 
