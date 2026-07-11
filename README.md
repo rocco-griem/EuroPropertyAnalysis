@@ -53,15 +53,10 @@ Python · pandas · numpy · SQLite · SQLAlchemy · Plotly · Streamlit · pyte
 ```bat
 python -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements-dev.txt
+pip install -r requirements.txt -r requirements-dev.txt
 pytest
-```
-
-The data pipeline and dashboard commands will be added as those layers are built:
-
-```bat
-python -m src.pipeline.run_pipeline   :: (added at the pipeline milestone)
-streamlit run dashboard/app.py        :: (added at the dashboard milestone)
+python -m src.pipeline.real_pipeline
+streamlit run dashboard/app.py
 ```
 
 ## Project structure
@@ -71,12 +66,11 @@ src/
   config/          settings: paths, DB URL, city/country definitions
   metrics/         pure, tested calculations (returns, risk, affordability)
   transformation/  rebasing & inflation adjustment (pure functions)
-  ingestion/       CSV loading (and optional API helpers) — later milestone
-  database/        SQLAlchemy models, connection, repository — later milestone
-  services/        analytics service layer the dashboard reads from — later milestone
-  pipeline/        end-to-end pipeline runner — later milestone
+  database/        SQLAlchemy models, connection, repository
+  services/        analytics service layer the dashboard reads from
+  pipeline/        CSV loading + end-to-end pipeline runner
   utils/           logging configuration
-dashboard/         Streamlit app (read-only) — later milestone
+dashboard/         Streamlit app (read-only)
 tests/             pytest unit tests
 data/              raw (committed CSVs), processed, database (generated)
 docs/              methodology and data-source notes
