@@ -32,8 +32,8 @@ _Screenshots to be added (Overview, City Comparison, Rankings, Affordability)._
 
 ## Cities analysed
 
-Target capitals (final inclusion depends on availability of credible city-level data):
-London, Paris, Berlin, Madrid, Lisbon, Amsterdam, Vienna, Warsaw, Prague, Budapest.
+London, Paris, Berlin, Madrid, Amsterdam, Vienna, Warsaw, Prague, Budapest (9 capitals — Lisbon
+was evaluated but excluded; see `docs/data_sources.md` for the full data-discovery writeup).
 
 ## Methodology (summary)
 

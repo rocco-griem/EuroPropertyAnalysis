@@ -62,9 +62,10 @@ class CapitalCity:
     data_quality_note: str | None = None
 
 
-# The 10 Version 1 target capitals. Data-discovery milestone (see docs/data_sources.md)
-# confirmed a credible city-level property source for all 10, so none are excluded — Madrid's
-# source is flagged as the one methodology asymmetry in the set.
+# The Version 1 target capitals. Data-discovery milestone (see docs/data_sources.md) confirmed
+# a credible, fetchable city-level property source for 9 of the original 10 — Madrid's source is
+# flagged as a methodology asymmetry (private/appraisal-based). Lisbon was dropped: its municipal
+# series is fragmented across incompatible methodology vintages with no clean 2015-2024 coverage.
 CAPITALS: tuple[CapitalCity, ...] = (
     CapitalCity("London", "United Kingdom", "UK", "GBP"),
     CapitalCity("Paris", "France", "FR", "EUR"),
@@ -79,7 +80,6 @@ CAPITALS: tuple[CapitalCity, ...] = (
             "series — not an official transaction statistic like the other cities here."
         ),
     ),
-    CapitalCity("Lisbon", "Portugal", "PT", "EUR"),
     CapitalCity("Amsterdam", "Netherlands", "NL", "EUR"),
     CapitalCity("Vienna", "Austria", "AT", "EUR"),
     CapitalCity("Warsaw", "Poland", "PL", "PLN"),

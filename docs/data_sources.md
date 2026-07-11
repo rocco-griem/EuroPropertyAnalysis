@@ -77,15 +77,46 @@ No missing years for any country in any series — verified programmatically at 
 | Lisbon | Portugal | **Yes, unconfirmed depth** | INE Portugal, "Estatísticas de Preços da Habitação ao Nível Local" — Lisboa reported | Quarterly; national series since 2009, **municipal breakout start year not yet confirmed against 2015** | Manual PDF/Excel per quarter; no single bulk file found | Medium | Tax-authority transaction data, median €/m² by municipality (not a smoothed index) — must verify historical files actually reach 2015 before committing to this source |
 | Madrid | Spain | **Borderline / no** | No official *sale-price* index at city level — INE's IPV is Comunidad Autónoma-level only (INE's municipal IPVA measures *rental*, not sale, prices). Only private-sector alternative: Tinsa IMIE Local Markets, which breaks out "Madrid capital" | Quarterly since 2001 | **Manual only** (web reports), no bulk download | Medium | **Appraisal-based, not transaction-based** — a different methodology from every other city above; not an official statistic |
 
-## Decision (confirmed 2026-07-10)
+## Decision (confirmed 2026-07-10, revised 2026-07-11 after actual fetching)
 
-**All 10 target capitals are included in V1.**
+**9 of the original 10 target capitals are included in V1: London, Paris, Berlin, Madrid,
+Amsterdam, Vienna, Warsaw, Prague, Budapest.**
 
 - **Madrid** is included via **Tinsa IMIE Local Markets**. Unlike every other city here, this is a
-  **private, appraisal-based series**, not an official transaction-based statistic — the dashboard
-  and methodology page must flag this asymmetry explicitly (`data_quality_flag` /
-  `is_proxy`-style caveat at the data-model level, plus a visible note in the UI).
-- **Berlin, Prague, and Lisbon** are included despite requiring manual PDF/Excel extraction rather
-  than a clean API or bulk CSV. **Lisbon's municipal breakout must be verified to actually reach
-  back to 2015** before its CSV is committed — if the local series turns out to start later, it
-  should be dropped (or its start year adjusted) at that point rather than assumed now.
+  **private, appraisal-based series**, not an official transaction-based statistic — flagged via
+  `City.data_quality_note` and surfaced in the dashboard (see M7a).
+- **Lisbon is excluded.** Actually fetching its data revealed the problem was worse than the
+  initial "unconfirmed depth" flag suggested: INE Portugal's municipal breakout is fragmented
+  across at least three incompatible methodology vintages with real gaps between them —
+  "Methodology 2018" (Q1 2016 – Q3 2021), "Methodology 2022" (Q4 2019 – Q4 2023), and a further
+  methodology continuing into 2024–2025 under yet another indicator code. INE's own published
+  reports show only snapshot medians (charts), not a downloadable reconciled long series. There is
+  no clean 2015–2024 series without splicing three incompatible vintages together — a worse
+  asymmetry than Madrid's single, if private, consistent series. Confirmed with the user
+  (2026-07-11): exclude rather than splice or truncate.
+- **Berlin and Prague** required manual Excel downloads (vdp Research quarterly press-release
+  file; ČSÚ quarterly release attachment) rather than a clean bulk API, but both had complete,
+  single-methodology 2015–2024 coverage once located — see the fetch notes below.
+
+## Fetched city-level data (committed to `data/raw/city_property_index.csv`)
+
+Long format (`city, year, index_value`), 2015–2024, 9 cities × 10 years (90 rows), fetched
+2026-07-11. Annual figures are the average of that year's quarterly (or monthly, for London)
+values from each source below. Levels are in each source's native unit/base year — irrelevant,
+since the pipeline rebases every series to 100 at the start year itself.
+
+| City | Actual source used | Endpoint / file |
+|---|---|---|
+| London | Land Registry UK HPI, `region=london`, monthly `housePriceIndex`, averaged to annual | `landregistry.data.gov.uk/data/ukhpi/region/london/month/{YYYY-MM}.json` |
+| Paris | INSEE series `010567013` (Paris apartments, Notaires-INSEE, base 2015=100) via INSEE's SDMX API (no auth needed) | `api.insee.fr/series/BDM/V1/data/SERIES_BDM/010567013` |
+| Amsterdam | CBS table `85792NED`, region `GM0363` (Amsterdam municipality), `PrijsindexVerkoopprijzen_1` | `opendata.cbs.nl/ODataApi/odata/85792NED/TypedDataSet?$filter=RegioS eq 'GM0363'` |
+| Vienna | OeNB isaweb report 6.6, CSV export, "Real estate price index, Vienna, 2000=100" — requires a session GET then a POST with a `zeitElementeList[0].vonJahrSelected`/`bisJahrSelected` year range to the `downloadResult` endpoint (the default view only shows the last ~3 years) | `oenb.at/isawebstat/stabfrage/downloadResult?lang=EN&exportTyp=CSV&report=6.6` |
+| Budapest | MNB's actual house-price-index workbook (distinct from a similarly-named housing-wealth workbook found first) — sheet `1.1`, Budapest column, quarterly since 1990 | `statisztika.mnb.hu/timeseries/MNB_lakasarindex_2025Q2.xlsx` |
+| Warsaw | NBP `ceny_mieszkan.xlsx`, sheet "Rynek wtórny" (secondary/existing-stock market), "Ceny transakcyjne" (transaction prices, not offer prices) section, Warszawa column | `static.nbp.pl/dane/rynek-nieruchomosci/ceny_mieszkan.xlsx` |
+| Berlin | vdp Research's free full-history regional workbook (not the paid product — a link buried on the vdp property-price-index page, not discoverable by URL-guessing), sheet "Berlin", annual (`JD`) rows, "Owner Occupied Housing" total index | `pfandbrief.de/wp-content/uploads/.../vdp_Immobilienpreisindex_Regional_QI2003-QI2026-1.xlsx` |
+| Prague | ČSÚ's quarterly release attachment (linked from the product page, not a stable URL — refetch by finding the current release's attachment links), "Indices of Realized Prices of Second-hand Flats", Praha column, base 2010=100 | `csu.gov.cz/docs/107508/.../01400725q1s.xlsx` (path changes per release) |
+| Madrid | Tinsa's own public price-history page embeds the full quarterly series (2001–present) directly in the page's JS chart config — no PDF-by-PDF collection needed | `tinsa.es/en/precio-vivienda/comunidad-madrid/madrid/` (regex-extracted from `data: [...]` / `categories: [...]` in the page source) |
+
+No missing years for any city — verified programmatically at fetch time. The one-off fetch script
+used to produce this CSV was not committed (kept in scratch) since it's an acquisition tool, not
+part of the reusable pipeline — M7d's `csv_loader` is the actual reusable ingestion code.
