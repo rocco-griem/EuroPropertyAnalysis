@@ -50,13 +50,13 @@ year.
 
 ### Data
 
-Currently showing **mock, hand-written placeholder data** ({current_cities}), used to prove the
-pipeline end-to-end (raw series → database → metrics → dashboard). Real national house-price,
-inflation, and income data will replace it in a later milestone. Cities are only included where a
-credible city-level property index exists — national data alone is never substituted for a missing
-city series. Data-discovery research (documented in `docs/data_sources.md`) confirmed a source for
-all 10 originally targeted capitals, so none are excluded — one city, Madrid, is flagged below as
-a methodology outlier rather than dropped.
+Showing **real historical data** for {current_cities}, sourced from national statistical offices,
+Eurostat, and OECD (see `docs/data_sources.md` for the full per-country and per-city breakdown).
+Cities are only included where a credible city-level property index exists — national data alone
+is never substituted for a missing city series. Data-discovery research confirmed a usable source
+for 9 of the 10 originally targeted capitals; Lisbon was excluded because its municipal series is
+fragmented across incompatible methodology vintages with no clean period-length coverage. Madrid is
+flagged below as a methodology outlier (private, appraisal-based source) rather than dropped.
 
 ### Caveats
 

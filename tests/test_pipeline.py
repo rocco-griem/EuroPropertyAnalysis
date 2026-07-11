@@ -1,4 +1,4 @@
-"""Tests for the pipeline layer: `compute_metrics` orchestration and the mock vertical slice."""
+"""Tests for the pipeline layer: `compute_metrics` orchestration."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from src.database.models import AnnualMetric, Base, SummaryMetric
 from src.database.repository import (
-    get_city_by_name,
     get_or_create_city,
     get_or_create_country,
     upsert_income_index,
@@ -16,9 +15,6 @@ from src.database.repository import (
     upsert_property_index,
 )
 from src.pipeline.compute_metrics import compute_city_metrics
-from src.pipeline.mock_pipeline import MOCK_CITY_TO_COUNTRY, MOCK_YEARS, load_mock_raw_data
-
-_ISO_CODES = {"France": "FR", "Spain": "ES"}
 
 
 @pytest.fixture()
@@ -129,35 +125,3 @@ class TestComputeCityMetrics:
 
         with pytest.raises(ValueError):
             compute_city_metrics(session, city)
-
-
-class TestMockPipelineVerticalSlice:
-    def test_load_and_compute_for_every_demo_city(self, session):
-        for city_name, country_name in MOCK_CITY_TO_COUNTRY.items():
-            country = get_or_create_country(
-                session,
-                name=country_name,
-                iso_code=_ISO_CODES[country_name],
-                currency_code="EUR",
-            )
-            get_or_create_city(session, name=city_name, country=country)
-
-        load_mock_raw_data(session)
-
-        for city_name in MOCK_CITY_TO_COUNTRY:
-            city = get_city_by_name(session, city_name)
-            compute_city_metrics(session, city)
-
-            annual_rows = session.scalars(
-                select(AnnualMetric).where(AnnualMetric.city_id == city.id)
-            ).all()
-            assert len(annual_rows) == len(MOCK_YEARS)
-
-            summary = session.scalar(select(SummaryMetric).where(SummaryMetric.city_id == city.id))
-            assert summary is not None
-            assert summary.start_year == MOCK_YEARS[0]
-            assert summary.end_year == MOCK_YEARS[-1]
-
-    def test_missing_city_raises(self, session):
-        with pytest.raises(ValueError):
-            load_mock_raw_data(session)

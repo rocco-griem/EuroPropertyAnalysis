@@ -12,18 +12,14 @@ from sqlalchemy import func, select
 
 from src.database.connection import get_session, init_db
 from src.database.models import SummaryMetric
-from src.pipeline.mock_pipeline import run_mock_pipeline
+from src.pipeline.real_pipeline import run_real_pipeline
 
 
 @st.cache_resource
 def ensure_database() -> None:
-    """Create tables and populate them with the M3 mock data if the database is empty.
-
-    Real data (M7) will replace `run_mock_pipeline` here — page code above this layer
-    doesn't need to change.
-    """
+    """Create tables and populate them with the real pipeline data if the database is empty."""
     init_db()
     with get_session() as session:
         row_count = session.execute(select(func.count()).select_from(SummaryMetric)).scalar_one()
     if row_count == 0:
-        run_mock_pipeline()
+        run_real_pipeline()

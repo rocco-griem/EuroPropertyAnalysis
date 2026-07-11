@@ -32,11 +32,6 @@ st.caption(
     "Historical residential property performance across European capitals, benchmarked "
     "against national housing markets."
 )
-st.warning(
-    "Showing **mock placeholder data** (Paris & Madrid, 2015–2020) while real data "
-    "sourcing is still in progress.",
-    icon="⚠️",
-)
 
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)
