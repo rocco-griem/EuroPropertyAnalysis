@@ -13,7 +13,7 @@ requires-python = ">=3.10"
 
 [tool.setuptools.packages.find]
 # The importable top-level package is `src` (matches the spec's commands, e.g.
-# `python -m src.pipeline.run_pipeline`).
+# `python -m src.pipeline.real_pipeline`).
 where = ["."]
 include = ["src*"]
 

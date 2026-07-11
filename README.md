@@ -1,12 +1,8 @@
 # EuroPropertyAnalysis
 
-> **Status: work in progress (Version 1).** This README is a stub that grows with the project.
-
-## One-sentence summary
-
-A production-style Python analytics project comparing residential property market performance
-across European capital cities from **2015 to the latest available year**, benchmarked against
-each country's wider national housing market.
+A Python analytics project comparing residential property market performance across nine European
+capital cities from **2015 to 2024**, benchmarked against each country's wider national housing
+market — built end to end from raw statistical-office data to a live dashboard.
 
 ## The question it answers
 
@@ -16,11 +12,33 @@ risk-adjusted basis?
 
 ## Live dashboard
 
-_Coming soon (Streamlit Community Cloud)._
+_Not yet deployed — runs locally, see "How to run locally" below. Live link coming soon
+(Streamlit Community Cloud)._
 
 ## Dashboard preview
 
-_Screenshots to be added (Overview, City Comparison, Rankings, Affordability)._
+| Overview | City Comparison |
+|---|---|
+| ![Overview](outputs/screenshots/overview.png) | ![City Comparison](outputs/screenshots/city_comparison.png) |
+
+| Rankings | Affordability |
+|---|---|
+| ![Rankings](outputs/screenshots/rankings.png) | ![Affordability](outputs/screenshots/affordability.png) |
+
+## Key results (2015–2024)
+
+- **Strongest growth:** Budapest, +241% nominal (14.6% CAGR) — the standout across the whole set.
+- **Weakest growth:** Paris, +19% nominal (2.0% CAGR), just behind London at +22% (2.3% CAGR).
+- **Biggest capital-vs-national outperformance:** Berlin, +33pp ahead of the German national
+  market over the period; Budapest close behind at +31pp ahead of Hungary.
+- **Biggest capital-vs-national underperformance:** Vienna and London, both roughly -21pp behind
+  their own national markets — in both cities the capital rose *more slowly* than the country as
+  a whole.
+- **Sharpest affordability pressure:** Budapest, where cumulative property price growth outpaced
+  income growth by 51pp on average across the period — the largest gap of any city studied.
+
+Full per-city figures: run the dashboard's Rankings and Affordability pages, or query
+`summary_metrics` directly.
 
 ## Key questions
 
@@ -34,6 +52,8 @@ _Screenshots to be added (Overview, City Comparison, Rankings, Affordability)._
 
 London, Paris, Berlin, Madrid, Amsterdam, Vienna, Warsaw, Prague, Budapest (9 capitals — Lisbon
 was evaluated but excluded; see `docs/data_sources.md` for the full data-discovery writeup).
+Madrid's property index is a private, appraisal-based series (Tinsa) rather than an official
+transaction statistic like every other city here — flagged directly in the dashboard.
 
 ## Methodology (summary)
 
