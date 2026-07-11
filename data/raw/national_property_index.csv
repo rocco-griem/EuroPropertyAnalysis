@@ -1,0 +1,101 @@
+country,year,index_value
+Austria,2015,100.0
+Austria,2016,106.71
+Austria,2017,112.14
+Austria,2018,118.83
+Austria,2019,125.97
+Austria,2020,135.52
+Austria,2021,151.02
+Austria,2022,168.49
+Austria,2023,163.68
+Austria,2024,163.06
+Czechia,2015,100.0
+Czechia,2016,107.2
+Czechia,2017,119.7
+Czechia,2018,130.0
+Czechia,2019,141.9
+Czechia,2020,153.9
+Czechia,2021,184.2
+Czechia,2022,215.3
+Czechia,2023,211.7
+Czechia,2024,222.3
+France,2015,100.0
+France,2016,101.04
+France,2017,104.24
+France,2018,107.29
+France,2019,110.86
+France,2020,116.62
+France,2021,124.13
+France,2022,131.82
+France,2023,131.26
+France,2024,126.39
+Germany,2015,100.0
+Germany,2016,107.5
+Germany,2017,114.1
+Germany,2018,121.7
+Germany,2019,128.7
+Germany,2020,138.7
+Germany,2021,154.7
+Germany,2022,164.1
+Germany,2023,150.3
+Germany,2024,148.0
+Hungary,2015,100.0
+Hungary,2016,113.38
+Hungary,2017,127.24
+Hungary,2018,145.5
+Hungary,2019,170.17
+Hungary,2020,178.58
+Hungary,2021,208.04
+Hungary,2022,254.52
+Hungary,2023,272.54
+Hungary,2024,309.86
+Netherlands,2015,100.0
+Netherlands,2016,105.29
+Netherlands,2017,113.81
+Netherlands,2018,124.4
+Netherlands,2019,133.38
+Netherlands,2020,144.07
+Netherlands,2021,164.94
+Netherlands,2022,186.84
+Netherlands,2023,183.26
+Netherlands,2024,198.24
+Poland,2015,100.0
+Poland,2016,101.86
+Poland,2017,105.78
+Poland,2018,112.74
+Poland,2019,122.52
+Poland,2020,135.36
+Poland,2021,147.77
+Poland,2022,165.21
+Poland,2023,179.78
+Poland,2024,206.7
+Portugal,2015,100.0
+Portugal,2016,107.12
+Portugal,2017,117.02
+Portugal,2018,129.03
+Portugal,2019,141.88
+Portugal,2020,154.33
+Portugal,2021,168.84
+Portugal,2022,190.17
+Portugal,2023,205.76
+Portugal,2024,224.44
+Spain,2015,100.0
+Spain,2016,104.62
+Spain,2017,111.1
+Spain,2018,118.58
+Spain,2019,124.71
+Spain,2020,127.5
+Spain,2021,132.19
+Spain,2022,141.98
+Spain,2023,147.69
+Spain,2024,160.25
+United Kingdom,2015,69.85
+United Kingdom,2016,74.74
+United Kingdom,2017,78.15
+United Kingdom,2018,80.62
+United Kingdom,2019,81.41
+United Kingdom,2020,83.75
+United Kingdom,2021,90.57
+United Kingdom,2022,98.97
+United Kingdom,2023,99.24
+United Kingdom,2024,99.87

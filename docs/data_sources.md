@@ -33,12 +33,34 @@ one harmonised methodology across them.
 
 | Country | Source / dataset | Coverage | Access |
 |---|---|---|---|
-| All 9 EU countries | OECD "Average annual wages" (`AV_AN_WAGE`) — preferred over Eurostat's Labour Cost Index, which includes employer contributions and isn't a true wage measure | ~2015–2023 (lags 12+ months) | OECD Data Explorer / SDMX API (`sdmx.oecd.org`), CSV export |
-| UK | ONS Average Weekly Earnings (`EARN01`) | 2000–present, monthly | CSV at `ons.gov.uk/employmentandlabourmarket/.../averageweeklyearnings` |
+| **All 10 countries, including the UK** | OECD "Average annual wages" (`AV_AN_WAGE`), national currency, current prices (`PRICE_BASE=V`) — preferred over Eurostat's Labour Cost Index (includes employer contributions, not a true wage measure) | 2015–2024 confirmed for every country during actual fetching | SDMX CSV API: `sdmx.oecd.org/public/rest/data/OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,1.0/{ISO3}..........?format=csv&startPeriod=2015` |
+
+Simplification found during sourcing (not assumed at the discovery-research stage): OECD's wage
+series is independent of Eurostat's EU-aggregation, so it still reports the UK past 2020 — no need
+for a separate ONS Average Weekly Earnings fetch for income specifically. HPI and CPI still need
+the Eurostat/ONS split below since Eurostat's *own* HPI/CPI datasets do drop UK coverage.
 
 All Eurostat, ONS, and OECD series above are freely redistributable in a public repo with
 attribution (Eurostat copyright notice; ONS/gov.uk Open Government Licence v3; OECD terms permit
 reuse with attribution) — no paywalls or registration required.
+
+## Fetched national data (committed to `data/raw/`)
+
+`data/raw/national_property_index.csv`, `national_inflation_index.csv`, `national_income_index.csv`
+— long format (`country, year, value`), 2015–2024, 10 countries × 10 years each (100 rows), fetched
+2026-07-10:
+
+- **Property index**: Eurostat `prc_hpi_a`, `purchase=TOTAL`, `unit=I15_A_AVG` for the 9 EU
+  countries; UK value is the annual average of the Land Registry UK HPI monthly `housePriceIndex`
+  (`landregistry.data.gov.uk/data/ukhpi/region/united-kingdom/month/{YYYY-MM}.json`) — note the
+  Land Registry index's own base year isn't 2015, which doesn't matter since the pipeline rebases
+  every series to 100 at the start year itself.
+- **CPI**: Eurostat `prc_hicp_aind`, `unit=INX_A_AVG`, `coicop=CP00` for the 9 EU countries; UK
+  from ONS series `D7BT` (`ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23/data`).
+- **Income**: OECD `AV_AN_WAGE` as above, for all 10 countries uniformly (national currency:
+  EUR for the 6 Eurozone countries, PLN/CZK/HUF/GBP for Poland/Czechia/Hungary/UK).
+
+No missing years for any country in any series — verified programmatically at fetch time.
 
 ## City-level property price index availability
 
