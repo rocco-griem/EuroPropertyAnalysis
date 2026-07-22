@@ -1,0 +1,11 @@
+# EuroPropertyAnalysis dashboard theme — sleek dark "fintech" look with a warm
+# amber/terracotta accent. Streamlit reads this from the working directory where
+# `streamlit run dashboard/app.py` is invoked (the project root).
+
+[theme]
+base = "dark"
+primaryColor = "#E8833A"           # warm amber/terracotta accent
+backgroundColor = "#0B0E14"        # near-black main plane
+secondaryBackgroundColor = "#161B26"  # sidebar / widget / card surface
+textColor = "#E6E9EF"              # off-white primary ink
+font = "sans serif"

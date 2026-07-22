@@ -1,10 +1,10 @@
-"""EuroPropertyAnalysis — Streamlit dashboard entry point (Overview page).
+"""EuroPropertyAnalysis — Streamlit dashboard entry point (navigation router).
 
 Run with: `streamlit run dashboard/app.py`
 
-This page only ever reads through `src.services.analytics` — never raw SQLAlchemy queries —
-so the query logic stays testable independent of the UI. Later pages (M6: City Comparison,
-Rankings, Affordability, Methodology) will follow the same pattern.
+This file only builds the navigation menu; each page's own logic lives in `views/overview.py` or
+`pages/*.py`. Every page reads exclusively through `src.services.analytics` — never raw SQLAlchemy
+queries — so the query logic stays testable independent of the UI.
 """
 
 from __future__ import annotations
@@ -18,36 +18,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st
 
-from components import charts, metric_cards
-from components.bootstrap import ensure_database
-from src.database.connection import get_session
-from src.services import analytics
+from components import theme
 
-st.set_page_config(page_title="EuroPropertyAnalysis", layout="wide")
+st.set_page_config(page_title="EuroPropertyAnalysis", page_icon=theme.PAGE_ICON, layout="wide")
 
-ensure_database()
+pages = [
+    st.Page("views/overview.py", title="Overview", icon="🏠", default=True),
+    st.Page("pages/1_City_Comparison.py", title="City Comparison", icon="⚖️"),
+    st.Page("pages/2_Rankings.py", title="Rankings", icon="🏆"),
+    st.Page("pages/3_Affordability.py", title="Affordability", icon="💶"),
+    st.Page("pages/4_Methodology.py", title="Methodology", icon="📖"),
+]
+pg = st.navigation(pages)
 
-st.title("EuroPropertyAnalysis")
-st.caption(
-    "Historical residential property performance across European capitals, benchmarked "
-    "against national housing markets."
-)
+st.sidebar.caption("Data: 2015–2024 · 9 European capitals")
 
-with get_session() as session:
-    summary_df = analytics.get_summary_table(session)
-    cities_df = analytics.list_available_cities(session)
-    all_cities = cities_df["city"].tolist()
-    selected_cities = st.multiselect("Cities", options=all_cities, default=all_cities)
-    annual_df = analytics.get_annual_metrics(session, city_names=selected_cities or None)
-
-selected_summary_df = summary_df[summary_df["city"].isin(selected_cities)]
-
-st.subheader("At a glance")
-metric_cards.render_summary_cards(selected_summary_df)
-
-st.subheader("Property price index over time (real, inflation-adjusted)")
-st.plotly_chart(charts.property_index_line_chart(annual_df), width="stretch")
-
-st.subheader("Whole-period summary")
-st.dataframe(selected_summary_df, hide_index=True)
-metric_cards.render_data_quality_notes(selected_summary_df)
+pg.run()

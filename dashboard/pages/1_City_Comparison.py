@@ -9,16 +9,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 
-from components import charts, metric_cards
+from components import charts, metric_cards, theme
 from components.bootstrap import ensure_database
 from src.database.connection import get_session
 from src.services import analytics
 
-st.set_page_config(page_title="EuroPropertyAnalysis — City Comparison", layout="wide")
+theme.inject_css()
 ensure_database()
 
-st.title("City Comparison")
-st.caption("Compare price trajectories and headline metrics across selected cities.")
+theme.page_header(
+    "City Comparison",
+    "Compare price trajectories and headline metrics across selected cities.",
+    accent_word="Comparison",
+)
 
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)
@@ -46,5 +49,5 @@ else:
     )
 
     st.subheader("Full metrics")
-    st.dataframe(selected_summary_df, hide_index=True)
+    theme.styled_dataframe(selected_summary_df)
     metric_cards.render_data_quality_notes(selected_summary_df)

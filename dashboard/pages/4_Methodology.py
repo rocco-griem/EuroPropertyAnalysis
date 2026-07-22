@@ -9,16 +9,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 
-from components import metric_cards
+from components import metric_cards, theme
 from components.bootstrap import ensure_database
 from src.config import settings
 from src.database.connection import get_session
 from src.services import analytics
 
-st.set_page_config(page_title="EuroPropertyAnalysis — Methodology", layout="wide")
+theme.inject_css()
 ensure_database()
 
-st.title("Methodology")
+theme.page_header("Methodology", accent_word="Methodology")
 
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)
