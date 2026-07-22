@@ -56,6 +56,10 @@ class CapitalCity:
     country: str
     iso_code: str       # ISO 3166-1 alpha-2 (matches Eurostat geo codes; UK uses "UK")
     currency_code: str  # ISO 4217
+    # Approximate city-centre coordinates (WGS84), used only to place the city on the Overview
+    # map. `None` for a city without coordinates (it's then simply omitted from the map).
+    lat: float | None = None
+    lon: float | None = None
     # Set only when this city's property index source is a methodological outlier versus the
     # rest of the set (e.g. a private/appraisal-based series rather than an official
     # transaction statistic) — see docs/data_sources.md for the full per-city research.
@@ -67,22 +71,24 @@ class CapitalCity:
 # flagged as a methodology asymmetry (private/appraisal-based). Lisbon was dropped: its municipal
 # series is fragmented across incompatible methodology vintages with no clean 2015-2024 coverage.
 CAPITALS: tuple[CapitalCity, ...] = (
-    CapitalCity("London", "United Kingdom", "UK", "GBP"),
-    CapitalCity("Paris", "France", "FR", "EUR"),
-    CapitalCity("Berlin", "Germany", "DE", "EUR"),
+    CapitalCity("London", "United Kingdom", "UK", "GBP", lat=51.5074, lon=-0.1278),
+    CapitalCity("Paris", "France", "FR", "EUR", lat=48.8566, lon=2.3522),
+    CapitalCity("Berlin", "Germany", "DE", "EUR", lat=52.5200, lon=13.4050),
     CapitalCity(
         "Madrid",
         "Spain",
         "ES",
         "EUR",
+        lat=40.4168,
+        lon=-3.7038,
         data_quality_note=(
             "Property index sourced from Tinsa IMIE Local Markets, a private, appraisal-based "
             "series — not an official transaction statistic like the other cities here."
         ),
     ),
-    CapitalCity("Amsterdam", "Netherlands", "NL", "EUR"),
-    CapitalCity("Vienna", "Austria", "AT", "EUR"),
-    CapitalCity("Warsaw", "Poland", "PL", "PLN"),
-    CapitalCity("Prague", "Czechia", "CZ", "CZK"),
-    CapitalCity("Budapest", "Hungary", "HU", "HUF"),
+    CapitalCity("Amsterdam", "Netherlands", "NL", "EUR", lat=52.3676, lon=4.9041),
+    CapitalCity("Vienna", "Austria", "AT", "EUR", lat=48.2082, lon=16.3738),
+    CapitalCity("Warsaw", "Poland", "PL", "PLN", lat=52.2297, lon=21.0122),
+    CapitalCity("Prague", "Czechia", "CZ", "CZK", lat=50.0755, lon=14.4378),
+    CapitalCity("Budapest", "Hungary", "HU", "HUF", lat=47.4979, lon=19.0402),
 )

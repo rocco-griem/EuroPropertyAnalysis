@@ -12,7 +12,7 @@ from statistics import mean
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.database.models import City, IncomeIndex, InflationIndex, PropertyIndex
+from src.database.models import City, IncomeIndex, InflationIndex, PropertyIndex, RentalPrice
 from src.database.repository import upsert_annual_metric, upsert_summary_metric
 from src.metrics.affordability import affordability_pressure, capital_vs_national_gap
 from src.metrics.returns import annual_growth_rates, cagr, total_growth
@@ -40,6 +40,11 @@ def _income_series(session: Session, *, country_id: int) -> dict[int, float]:
     return {row.year: row.index_value for row in rows}
 
 
+def _rental_series(session: Session, *, city_id: int) -> dict[int, float]:
+    rows = session.scalars(select(RentalPrice).where(RentalPrice.city_id == city_id))
+    return {row.year: row.rental_eur_sqm for row in rows}
+
+
 def compute_city_metrics(session: Session, city: City) -> None:
     """Read a city's raw series, compute annual + summary metrics, and upsert both.
 
@@ -53,6 +58,9 @@ def compute_city_metrics(session: Session, city: City) -> None:
     national_raw = _property_series(session, country_id=country_id, city_id=None)
     cpi_raw = _inflation_series(session, country_id=country_id)
     income_raw = _income_series(session, country_id=country_id)
+    # Rent is optional and its year coverage may differ from the property/CPI/income years
+    # (e.g. it starts later), so it's handled independently of the strict year-match check below.
+    rental_raw = _rental_series(session, city_id=city.id)
 
     years = sorted(city_raw)
     if not years:
@@ -93,6 +101,7 @@ def compute_city_metrics(session: Session, city: City) -> None:
             yoy_growth_pct=yoy[i - 1] * 100 if i > 0 else None,
             affordability_pressure_pct=affordability_pct[i],
             capital_vs_national_gap_pct=capital_vs_national_pct[i],
+            rental_per_sqm=rental_raw.get(year),
         )
 
     cagr_value = cagr(city_nominal[0], city_nominal[-1], len(years) - 1)
@@ -110,5 +119,16 @@ def compute_city_metrics(session: Session, city: City) -> None:
         summary_kwargs["volatility_pct"] = volatility_value * 100
         if volatility_value != 0:
             summary_kwargs["risk_adjusted_return"] = risk_adjusted_return(cagr_value, volatility_value)
+
+    # Rent: latest available level + whole-period CAGR over the rental years actually present
+    # (independent of the property years, and only when there are >= 2 years and a positive base).
+    rental_years = sorted(rental_raw)
+    if rental_years:
+        summary_kwargs["latest_rental_per_sqm"] = rental_raw[rental_years[-1]]
+        first_rent = rental_raw[rental_years[0]]
+        if len(rental_years) >= 2 and first_rent > 0:
+            summary_kwargs["rental_cagr_pct"] = (
+                cagr(first_rent, rental_raw[rental_years[-1]], len(rental_years) - 1) * 100
+            )
 
     upsert_summary_metric(session, **summary_kwargs)

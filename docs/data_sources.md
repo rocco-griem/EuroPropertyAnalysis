@@ -120,3 +120,40 @@ since the pipeline rebases every series to 100 at the start year itself.
 No missing years for any city — verified programmatically at fetch time. The one-off fetch script
 used to produce this CSV was not committed (kept in scratch) since it's an acquisition tool, not
 part of the reusable pipeline — M7d's `csv_loader` is the actual reusable ingestion code.
+
+## Rental values — Deloitte Property Index (committed to `data/raw/city_rental_per_sqm.csv`)
+
+Average monthly residential **rent in EUR/m²** per capital, long format (`city, year,
+rental_eur_sqm`), 9 cities × 2016–2024 (81 rows), read 2026-07-22 from the "Average Monthly Rent
+(EUR/m²)" chart in each annual **Deloitte Property Index** report. Each edition reports the prior
+calendar year, so rent years 2016–2024 come from editions 2017–2025. Rent-year **2015 is not
+available** — Deloitte's cross-city rent comparison chart began with the 6th edition (2017); the
+rental series therefore starts in 2016 (the property index still runs from 2015).
+
+| Rent year | Deloitte edition (PDF) | Chart label |
+|---|---|---|
+| 2016 | 6th ed., July 2017 | rent = the circled €/m² above each yield bar |
+| 2017 | 7th ed., Sept 2018 | "Average Monthly Asking Rent per sq m in EUR, 2017" |
+| 2018 | 8th ed., July 2019 | "Average Monthly Rent per sq m in EUR, 2018" |
+| 2019 | 9th ed., July 2020 | "Average Monthly Rent (EUR/sqm)" |
+| 2020 | 10th ed., July 2021 | "Average Monthly Rent (EUR/sqm)" |
+| 2021 | 11th ed., Aug 2022 | "Average Monthly Rent (EUR/sqm)" |
+| 2022 | 12th ed., Aug 2023 | "Average Monthly Rent (EUR/sqm)" |
+| 2023 | 13th ed., Aug 2024 | "Average Monthly Rent (EUR/sqm), 2023" |
+| 2024 | 14th ed., Aug 2025 | "Average Monthly Rent per sqm in EUR, 2024" |
+
+Archive: `https://www.deloitte.com/cz-sk/en/Industries/real-estate/research/property-index-archive.html`
+
+**London** is the **mean of the inner and outer London figures** where both are published; for
+2018 Deloitte gave a single "London" figure (20.1), and for 2024 only "London (outer)" (23.8) was
+listed, so those years use the single published value.
+
+**Caveats (why the rental series is flagged as _indicative_):**
+- Deloitte's rent methodology and chart labels shift across editions — "average monthly rent" vs.
+  "average monthly **asking** rent" — and early editions note contracted-rent effects (e.g. Berlin
+  reads low in 2017–2018 because long-standing contracted rents sat well below asking rents). So
+  year-on-year moves in the early years, and fine cross-city gaps, are not perfectly comparable.
+- Values are already in EUR in the source (Deloitte converts), so no FX layer is applied here even
+  though London/Warsaw/Prague/Budapest transact in non-euro currencies.
+- Unlike the property/income series, rent is stored as an **absolute €/m² level**, not a rebased
+  index — it is shown as published, and "rent CAGR" is computed over the years actually present.

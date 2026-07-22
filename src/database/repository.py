@@ -19,6 +19,7 @@ from src.database.models import (
     IncomeIndex,
     InflationIndex,
     PropertyIndex,
+    RentalPrice,
     SummaryMetric,
 )
 
@@ -111,6 +112,30 @@ def upsert_property_index(
     return row
 
 
+def upsert_rental_price(
+    session: Session,
+    *,
+    country: Country,
+    city: City,
+    year: int,
+    rental_eur_sqm: float,
+    source: DataSource | None = None,
+) -> RentalPrice:
+    row = session.scalar(
+        select(RentalPrice).where(RentalPrice.city_id == city.id, RentalPrice.year == year)
+    )
+    if row is None:
+        row = RentalPrice(
+            country=country, city=city, year=year, rental_eur_sqm=rental_eur_sqm, source=source
+        )
+        session.add(row)
+    else:
+        row.rental_eur_sqm = rental_eur_sqm
+        row.source = source
+    session.flush()
+    return row
+
+
 def upsert_inflation_index(
     session: Session,
     *,
@@ -168,6 +193,7 @@ def upsert_annual_metric(
     yoy_growth_pct: float | None = None,
     affordability_pressure_pct: float | None = None,
     capital_vs_national_gap_pct: float | None = None,
+    rental_per_sqm: float | None = None,
 ) -> AnnualMetric:
     row = session.scalar(
         select(AnnualMetric).where(AnnualMetric.city_id == city.id, AnnualMetric.year == year)
@@ -180,6 +206,7 @@ def upsert_annual_metric(
     row.yoy_growth_pct = yoy_growth_pct
     row.affordability_pressure_pct = affordability_pressure_pct
     row.capital_vs_national_gap_pct = capital_vs_national_gap_pct
+    row.rental_per_sqm = rental_per_sqm
     session.flush()
     return row
 
@@ -196,6 +223,8 @@ def upsert_summary_metric(
     risk_adjusted_return: float | None = None,
     avg_affordability_pressure_pct: float | None = None,
     capital_vs_national_gap_pct: float | None = None,
+    latest_rental_per_sqm: float | None = None,
+    rental_cagr_pct: float | None = None,
 ) -> SummaryMetric:
     row = session.scalar(select(SummaryMetric).where(SummaryMetric.city_id == city.id))
     if row is None:
@@ -209,6 +238,8 @@ def upsert_summary_metric(
     row.risk_adjusted_return = risk_adjusted_return
     row.avg_affordability_pressure_pct = avg_affordability_pressure_pct
     row.capital_vs_national_gap_pct = capital_vs_national_gap_pct
+    row.latest_rental_per_sqm = latest_rental_per_sqm
+    row.rental_cagr_pct = rental_cagr_pct
     row.computed_at = dt.datetime.now(dt.timezone.utc)
     session.flush()
     return row

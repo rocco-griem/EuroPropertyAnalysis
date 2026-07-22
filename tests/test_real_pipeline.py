@@ -67,3 +67,22 @@ class TestRunRealPipeline:
 
         summaries = ran_pipeline.scalars(select(SummaryMetric)).all()
         assert len(summaries) == len(CAPITALS)
+
+    def test_rental_metrics_populate_for_every_city(self, ran_pipeline):
+        for capital in CAPITALS:
+            city = get_city_by_name(ran_pipeline, capital.city)
+            summary = ran_pipeline.scalar(
+                select(SummaryMetric).where(SummaryMetric.city_id == city.id)
+            )
+            assert summary.latest_rental_per_sqm is not None and summary.latest_rental_per_sqm > 0
+            assert summary.rental_cagr_pct is not None
+
+    def test_rental_starts_in_2016_not_2015(self, ran_pipeline):
+        city = get_city_by_name(ran_pipeline, "Berlin")
+        rows = ran_pipeline.scalars(
+            select(AnnualMetric).where(AnnualMetric.city_id == city.id)
+        ).all()
+        by_year = {r.year: r.rental_per_sqm for r in rows}
+        # Property runs 2015–2024, but rent is only published from 2016.
+        assert by_year[2015] is None
+        assert all(by_year[y] is not None and by_year[y] > 0 for y in range(2016, 2025))

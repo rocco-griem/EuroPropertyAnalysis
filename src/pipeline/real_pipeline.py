@@ -16,11 +16,13 @@ from src.database.repository import (
     upsert_income_index,
     upsert_inflation_index,
     upsert_property_index,
+    upsert_rental_price,
 )
 from src.database.seed import seed_countries_and_cities
 from src.pipeline.compute_metrics import compute_city_metrics
 from src.pipeline.csv_loader import (
     load_city_property_index,
+    load_city_rental_per_sqm,
     load_national_income_index,
     load_national_inflation_index,
     load_national_property_index,
@@ -57,6 +59,17 @@ _CITY_PROPERTY_SOURCE = dict(
         "methodology caveat recorded on City.data_quality_note."
     ),
 )
+_CITY_RENTAL_SOURCE = dict(
+    name="Deloitte Property Index — Average Monthly Rent (EUR/m²)",
+    url="https://www.deloitte.com/cz-sk/en/Industries/real-estate/research/property-index-archive.html",
+    description=(
+        "Average monthly residential rent in EUR/m² read from the rent chart in each annual "
+        "Deloitte Property Index (editions 2017–2025, covering rent years 2016–2024). London is "
+        "the mean of the inner/outer figures where both are published. Deloitte's rent "
+        "methodology and labels vary across editions (average vs. asking rent), so the series is "
+        "indicative — see docs/data_sources.md."
+    ),
+)
 
 
 def load_real_raw_data(session: Session) -> None:
@@ -68,11 +81,13 @@ def load_real_raw_data(session: Session) -> None:
     national_inflation = load_national_inflation_index()
     national_income = load_national_income_index()
     city_property = load_city_property_index()
+    city_rental = load_city_rental_per_sqm()
 
     property_source = get_or_create_data_source(session, **_NATIONAL_PROPERTY_SOURCE)
     inflation_source = get_or_create_data_source(session, **_NATIONAL_INFLATION_SOURCE)
     income_source = get_or_create_data_source(session, **_NATIONAL_INCOME_SOURCE)
     city_source = get_or_create_data_source(session, **_CITY_PROPERTY_SOURCE)
+    rental_source = get_or_create_data_source(session, **_CITY_RENTAL_SOURCE)
 
     for capital in CAPITALS:
         city = get_city_by_name(session, capital.city)
@@ -90,6 +105,10 @@ def load_real_raw_data(session: Session) -> None:
             upsert_inflation_index(session, country=country, year=year, cpi_value=value, source=inflation_source)
         for year, value in national_income[capital.country].items():
             upsert_income_index(session, country=country, year=year, index_value=value, source=income_source)
+        for year, value in city_rental.get(capital.city, {}).items():
+            upsert_rental_price(
+                session, country=country, city=city, year=year, rental_eur_sqm=value, source=rental_source
+            )
 
 
 def run_real_pipeline() -> None:

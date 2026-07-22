@@ -97,6 +97,34 @@ class PropertyIndex(Base):
         return f"PropertyIndex(country_id={self.country_id}, city_id={self.city_id}, year={self.year})"
 
 
+class RentalPrice(Base):
+    """A raw average residential rent for one city-year, in EUR per square metre per month.
+
+    Stored as an absolute level (not rebased) because it's a real €/m² figure, unlike the
+    property/CPI/income series which are indices. National scope isn't used here — rent is
+    city-level only — but `country_id` is kept for symmetry with `PropertyIndex` and joins.
+    """
+
+    __tablename__ = "rental_prices"
+    __table_args__ = (
+        UniqueConstraint("city_id", "year", name="uq_rental_price_city_year"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False)
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    rental_eur_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    source_id: Mapped[int | None] = mapped_column(ForeignKey("data_sources.id"))
+
+    country: Mapped["Country"] = relationship()
+    city: Mapped["City"] = relationship()
+    source: Mapped["DataSource | None"] = relationship()
+
+    def __repr__(self) -> str:
+        return f"RentalPrice(city_id={self.city_id}, year={self.year})"
+
+
 class InflationIndex(Base):
     """Country-level CPI value for one year, used to compute inflation-adjusted values."""
 
@@ -153,6 +181,9 @@ class AnnualMetric(Base):
     yoy_growth_pct: Mapped[float | None] = mapped_column(Float)
     affordability_pressure_pct: Mapped[float | None] = mapped_column(Float)
     capital_vs_national_gap_pct: Mapped[float | None] = mapped_column(Float)
+    # Average residential rent, EUR/m²/month (absolute level, not an index). Null for years
+    # with no sourced rent figure — rental coverage can differ from the property-index years.
+    rental_per_sqm: Mapped[float | None] = mapped_column(Float)
 
     city: Mapped["City"] = relationship()
 
@@ -175,6 +206,10 @@ class SummaryMetric(Base):
     risk_adjusted_return: Mapped[float | None] = mapped_column(Float)
     avg_affordability_pressure_pct: Mapped[float | None] = mapped_column(Float)
     capital_vs_national_gap_pct: Mapped[float | None] = mapped_column(Float)
+    # Rent (EUR/m²/month) in the latest year with data, and its whole-period CAGR (%). Null when
+    # the city has no rental series or too few rental years to compute a growth rate.
+    latest_rental_per_sqm: Mapped[float | None] = mapped_column(Float)
+    rental_cagr_pct: Mapped[float | None] = mapped_column(Float)
     computed_at: Mapped[dt.datetime] = mapped_column(
         DateTime, default=lambda: dt.datetime.now(dt.timezone.utc)
     )

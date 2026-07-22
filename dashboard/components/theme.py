@@ -203,6 +203,9 @@ _COLUMN_CONFIG = {
     "capital_vs_national_gap_pct": {"label": "Capital vs national", "format": "%.1f pp"},
     "property_index_nominal": {"label": "Index (nominal)", "format": "%.1f"},
     "property_index_real": {"label": "Index (real)", "format": "%.1f"},
+    "rental_per_sqm": {"label": "Rent (€/m²)", "format": "€%.1f"},
+    "latest_rental_per_sqm": {"label": "Latest rent (€/m²)", "format": "€%.1f"},
+    "rental_cagr_pct": {"label": "Rent CAGR", "format": "%.1f%%"},
     "data_quality_note": {"label": "Data-quality note"},
 }
 

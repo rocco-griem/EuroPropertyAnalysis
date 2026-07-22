@@ -35,7 +35,8 @@ def get_summary_table(session: Session) -> pd.DataFrame:
 
     Columns: city, country, start_year, end_year, total_growth_pct, cagr_pct, volatility_pct,
     risk_adjusted_return, avg_affordability_pressure_pct, capital_vs_national_gap_pct,
-    data_quality_note (None unless the city's source is a methodological outlier).
+    latest_rental_per_sqm, rental_cagr_pct, data_quality_note (None unless the city's source is a
+    methodological outlier).
     """
     columns = [
         "city",
@@ -48,6 +49,8 @@ def get_summary_table(session: Session) -> pd.DataFrame:
         "risk_adjusted_return",
         "avg_affordability_pressure_pct",
         "capital_vs_national_gap_pct",
+        "latest_rental_per_sqm",
+        "rental_cagr_pct",
         "data_quality_note",
     ]
     rows = session.execute(
@@ -62,6 +65,8 @@ def get_summary_table(session: Session) -> pd.DataFrame:
             SummaryMetric.risk_adjusted_return,
             SummaryMetric.avg_affordability_pressure_pct,
             SummaryMetric.capital_vs_national_gap_pct,
+            SummaryMetric.latest_rental_per_sqm,
+            SummaryMetric.rental_cagr_pct,
             City.data_quality_note,
         )
         .join(City, SummaryMetric.city_id == City.id)
@@ -75,7 +80,7 @@ def get_annual_metrics(session: Session, city_names: Sequence[str] | None = None
     """Year-by-year metrics, for time series charts.
 
     Columns: city, country, year, property_index_nominal, property_index_real, yoy_growth_pct,
-    affordability_pressure_pct, capital_vs_national_gap_pct.
+    affordability_pressure_pct, capital_vs_national_gap_pct, rental_per_sqm.
 
     `city_names=None` (the default) returns every city; otherwise only the named ones.
     """
@@ -88,6 +93,7 @@ def get_annual_metrics(session: Session, city_names: Sequence[str] | None = None
         "yoy_growth_pct",
         "affordability_pressure_pct",
         "capital_vs_national_gap_pct",
+        "rental_per_sqm",
     ]
     query = (
         select(
@@ -99,6 +105,7 @@ def get_annual_metrics(session: Session, city_names: Sequence[str] | None = None
             AnnualMetric.yoy_growth_pct,
             AnnualMetric.affordability_pressure_pct,
             AnnualMetric.capital_vs_national_gap_pct,
+            AnnualMetric.rental_per_sqm,
         )
         .join(City, AnnualMetric.city_id == City.id)
         .join(Country, City.country_id == Country.id)

@@ -11,8 +11,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
+import streamlit.components.v1 as components
 
-from components import charts, metric_cards, theme
+from components import charts, hero_map, metric_cards, theme
 from components.bootstrap import ensure_database
 from src.database.connection import get_session
 from src.services import analytics
@@ -22,10 +23,13 @@ ensure_database()
 
 theme.page_header(
     "EuroPropertyAnalysis",
-    "Historical residential property performance across European capitals, benchmarked "
-    "against national housing markets.",
+    "How nine European capital-city property markets have performed since 2015 — in price, "
+    "after inflation, against incomes, and versus their national markets.",
     accent_word="Property",
 )
+
+# Day→night map of the capitals (scroll within it to bring on the city lights).
+components.html(hero_map.render(), height=560, scrolling=False)
 
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)

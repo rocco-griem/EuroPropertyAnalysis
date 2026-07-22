@@ -39,3 +39,10 @@ def load_national_income_index() -> dict[str, dict[int, float]]:
 def load_city_property_index() -> dict[str, dict[int, float]]:
     """City -> {year: index_value}, from `city_property_index.csv`."""
     return _load_long_csv(RAW_DIR / "city_property_index.csv", key_col="city", value_col="index_value")
+
+
+def load_city_rental_per_sqm() -> dict[str, dict[int, float]]:
+    """City -> {year: rental_eur_sqm}, from `city_rental_per_sqm.csv` (EUR/m²/month)."""
+    return _load_long_csv(
+        RAW_DIR / "city_rental_per_sqm.csv", key_col="city", value_col="rental_eur_sqm"
+    )
