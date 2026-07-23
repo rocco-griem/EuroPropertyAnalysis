@@ -2,6 +2,11 @@
 # amber/terracotta accent. Streamlit reads this from the working directory where
 # `streamlit run dashboard/app.py` is invoked (the project root).
 
+[server]
+# Serves dashboard/static/*.webp (NASA satellite imagery for the Overview hero) at the relative
+# URL `app/static/<file>`, resolved relative to the entrypoint script (dashboard/app.py).
+enableStaticServing = true
+
 [theme]
 base = "dark"
 primaryColor = "#E8833A"           # warm amber/terracotta accent

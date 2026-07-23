@@ -37,6 +37,31 @@ def property_index_line_chart(annual_df: pd.DataFrame) -> go.Figure:
     return metric_line_chart(annual_df, "property_index_real", "Property index (real, base = 100)")
 
 
+def quarterly_property_chart(quarterly_df: pd.DataFrame) -> go.Figure:
+    """One line per city: quarterly EUR/m², for places with sub-annual history (currently only
+    Palma/Mallorca — see `analytics.get_quarterly_property_index`). A single decimal `period`
+    column (year + (quarter-1)/4) drives the x-axis so quarters within a year space out evenly."""
+    df = quarterly_df.copy()
+    df["period"] = df["year"] + (df["quarter"] - 1) / 4
+    df["period_label"] = df["year"].astype(str) + " Q" + df["quarter"].astype(str)
+    cities = df["city"].unique().tolist() if not df.empty else []
+    fig = px.line(
+        df,
+        x="period",
+        y="eur_per_sqm",
+        color="city",
+        color_discrete_map=theme.city_color_map(cities),
+        labels={"period": "Year", "eur_per_sqm": "Price (€/m²)"},
+        custom_data=["period_label"],
+    )
+    fig.update_traces(
+        line=dict(width=2.2),
+        hovertemplate="%{customdata[0]}: €%{y:,.0f}/m²<extra>%{fullData.name}</extra>",
+    )
+    fig.update_layout(legend_title_text="City", hovermode="x unified")
+    return theme.apply_chart_theme(fig)
+
+
 def metric_bar_chart(summary_df: pd.DataFrame, metric_col: str, metric_label: str) -> go.Figure:
     """Horizontal bar chart of one `summary_metrics` column, one bar per city, ranked descending.
 

@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import streamlit as st
 import streamlit.components.v1 as components
 
-from components import charts, hero_map, metric_cards, theme
+from components import charts, hero_globe, hero_map, metric_cards, theme
 from components.bootstrap import ensure_database
 from src.database.connection import get_session
 from src.services import analytics
@@ -23,13 +23,23 @@ ensure_database()
 
 theme.page_header(
     "EuroPropertyAnalysis",
-    "How nine European capital-city property markets have performed since 2015 — in price, "
-    "after inflation, against incomes, and versus their national markets.",
+    "How nine European capital cities — plus Palma — have performed since 2015 — in price, "
+    "after inflation, against incomes, and versus their national markets. Want to go deeper on "
+    "one place? See the Mallorca Deep Dive page.",
     accent_word="Property",
 )
 
-# Day→night map of the capitals (scroll within it to bring on the city lights).
-components.html(hero_map.render(), height=560, scrolling=False)
+# Day→night map of the capitals (scroll within it to bring on the city lights). Two renderings
+# of the same NASA satellite imagery — a flat Web-Mercator map and a 3D rotating globe — sit
+# behind a toggle so both can be compared with real data around them before picking one.
+hero_choice = st.radio(
+    "Hero visual", ["Flat map", "Globe"], horizontal=True,
+    key="hero_choice", label_visibility="collapsed",
+)
+if hero_choice == "Globe":
+    components.html(hero_globe.render(), height=560, scrolling=False)
+else:
+    components.html(hero_map.render(), height=560, scrolling=False)
 
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)

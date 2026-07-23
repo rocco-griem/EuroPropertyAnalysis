@@ -46,3 +46,19 @@ def load_city_rental_per_sqm() -> dict[str, dict[int, float]]:
     return _load_long_csv(
         RAW_DIR / "city_rental_per_sqm.csv", key_col="city", value_col="rental_eur_sqm"
     )
+
+
+def load_city_property_index_quarterly() -> dict[str, dict[tuple[int, int], float]]:
+    """City -> {(year, quarter): eur_per_sqm}, from `city_property_index_quarterly.csv`.
+
+    Sub-annual detail, currently sourced only for Palma/Mallorca (Tinsa publishes quarterly back
+    to 2001) — most other cities' sources are annualised in `city_property_index.csv` instead,
+    pending the M10 quarterly re-acquisition. Absent for a city simply means no quarterly rows.
+    """
+    path = RAW_DIR / "city_property_index_quarterly.csv"
+    series: dict[str, dict[tuple[int, int], float]] = {}
+    with path.open(newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            key = (int(row["year"]), int(row["quarter"]))
+            series.setdefault(row["city"], {})[key] = float(row["eur_per_sqm"])
+    return series

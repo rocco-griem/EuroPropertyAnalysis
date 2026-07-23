@@ -12,17 +12,27 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from src.config.settings import CAPITALS
-from src.database.models import AnnualMetric, Base, City, Country, PropertyIndex, SummaryMetric
+from src.config.settings import PLACES
+from src.database.models import (
+    AnnualMetric,
+    Base,
+    City,
+    Country,
+    PropertyIndex,
+    PropertyIndexQuarterly,
+    SummaryMetric,
+)
 from src.database.repository import (
     get_or_create_city,
     get_or_create_country,
     get_or_create_data_source,
     list_cities,
+    set_city_parent,
     upsert_annual_metric,
     upsert_income_index,
     upsert_inflation_index,
     upsert_property_index,
+    upsert_property_index_quarterly,
     upsert_summary_metric,
 )
 
@@ -59,6 +69,27 @@ class TestCountryAndCity:
         get_or_create_city(session, name="Springfield", country=de)
 
         assert len(list_cities(session)) == 2
+
+    def test_place_type_defaults_to_capital(self, session):
+        country = get_or_create_country(session, name="France", iso_code="FR", currency_code="EUR")
+        city = get_or_create_city(session, name="Paris", country=country)
+
+        assert city.place_type == "capital"
+
+    def test_place_type_can_be_set(self, session):
+        country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
+        city = get_or_create_city(session, name="Mallorca", country=country, place_type="island")
+
+        assert city.place_type == "island"
+
+    def test_set_city_parent(self, session):
+        country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
+        mallorca = get_or_create_city(session, name="Mallorca", country=country, place_type="island")
+        palma = get_or_create_city(session, name="Palma", country=country, place_type="city")
+
+        set_city_parent(session, city=palma, parent=mallorca)
+
+        assert palma.parent_id == mallorca.id
 
 
 class TestDataSource:
@@ -105,6 +136,49 @@ class TestPropertyIndexUpsert:
         upsert_property_index(session, country=country, year=2015, index_value=100.0)
 
         rows = session.scalars(select(PropertyIndex)).all()
+        assert len(rows) == 2
+
+
+class TestPropertyIndexQuarterlyUpsert:
+    def test_creates_a_quarterly_row(self, session):
+        country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
+        city = get_or_create_city(session, name="Palma", country=country)
+
+        row = upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=1, eur_per_sqm=1634.31
+        )
+
+        assert row.city_id == city.id
+        assert row.year == 2015 and row.quarter == 1
+        assert row.eur_per_sqm == pytest.approx(1634.31)
+
+    def test_repeat_call_updates_instead_of_duplicating(self, session):
+        country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
+        city = get_or_create_city(session, name="Palma", country=country)
+
+        upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=1, eur_per_sqm=1000.0
+        )
+        upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=1, eur_per_sqm=1050.0
+        )
+
+        rows = session.scalars(select(PropertyIndexQuarterly)).all()
+        assert len(rows) == 1
+        assert rows[0].eur_per_sqm == pytest.approx(1050.0)
+
+    def test_different_quarters_of_same_year_coexist(self, session):
+        country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
+        city = get_or_create_city(session, name="Palma", country=country)
+
+        upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=1, eur_per_sqm=1000.0
+        )
+        upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=2, eur_per_sqm=1010.0
+        )
+
+        rows = session.scalars(select(PropertyIndexQuarterly)).all()
         assert len(rows) == 2
 
 
@@ -161,8 +235,8 @@ class TestSeed:
 
         seed_module.seed_countries_and_cities()
 
-        assert len(session.scalars(select(Country)).all()) == len({c.country for c in CAPITALS})
-        assert len(list_cities(session)) == len(CAPITALS)
+        assert len(session.scalars(select(Country)).all()) == len({p.country for p in PLACES})
+        assert len(list_cities(session)) == len(PLACES)
 
     def test_seed_is_idempotent(self, session, monkeypatch):
         import src.database.seed as seed_module
@@ -177,4 +251,23 @@ class TestSeed:
         seed_module.seed_countries_and_cities()
         seed_module.seed_countries_and_cities()
 
-        assert len(list_cities(session)) == len(CAPITALS)
+        assert len(list_cities(session)) == len(PLACES)
+
+    def test_seed_resolves_palma_mallorca_parent_link(self, session, monkeypatch):
+        import src.database.seed as seed_module
+        from src.database.repository import get_city_by_name
+
+        @contextmanager
+        def fake_get_session():
+            yield session
+
+        monkeypatch.setattr(seed_module, "init_db", lambda: None)
+        monkeypatch.setattr(seed_module, "get_session", fake_get_session)
+
+        seed_module.seed_countries_and_cities()
+
+        palma = get_city_by_name(session, "Palma")
+        mallorca = get_city_by_name(session, "Mallorca")
+        assert palma.parent_id == mallorca.id
+        assert mallorca.place_type == "island"
+        assert palma.place_type == "city"

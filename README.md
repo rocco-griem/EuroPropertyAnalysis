@@ -1,8 +1,9 @@
 # EuroPropertyAnalysis
 
 A Python analytics project comparing residential property market performance across nine European
-capital cities from **2015 to 2024**, benchmarked against each country's wider national housing
-market — built end to end from raw statistical-office data to a live dashboard.
+capital cities — plus Palma — from **2015 to 2024**, benchmarked against each country's wider
+national housing market — built end to end from raw statistical-office data to a live dashboard.
+A dedicated deep-dive page adds Mallorca (the island) alongside Palma for a closer look.
 
 ## The question it answers
 
@@ -24,6 +25,10 @@ _Not yet deployed — runs locally, see "How to run locally" below. Live link co
 | Rankings | Affordability |
 |---|---|
 | ![Rankings](outputs/screenshots/rankings.png) | ![Affordability](outputs/screenshots/affordability.png) |
+
+The Overview page's scroll-driven day→night hero (a flat map and an alternative 3D globe, pick
+either) is real NASA satellite photography — Blue Marble by day, VIIRS Black Marble city lights
+by night — not illustration. See [`docs/data_sources.md`](docs/data_sources.md#overview-page-hero-imagery).
 
 ## Key results (2015–2024)
 
@@ -51,9 +56,14 @@ Full per-city figures: run the dashboard's Rankings and Affordability pages, or 
 ## Cities analysed
 
 London, Paris, Berlin, Madrid, Amsterdam, Vienna, Warsaw, Prague, Budapest (9 capitals — Lisbon
-was evaluated but excluded; see `docs/data_sources.md` for the full data-discovery writeup).
-Madrid's property index is a private, appraisal-based series (Tinsa) rather than an official
-transaction statistic like every other city here — flagged directly in the dashboard.
+was evaluated but excluded; see `docs/data_sources.md` for the full data-discovery writeup), plus
+**Palma**, added as a place of special interest. Madrid's and Palma's property indices are a
+private, appraisal-based series (Tinsa) rather than an official transaction statistic like every
+other city here — flagged directly in the dashboard.
+
+A separate **Mallorca Deep Dive** dashboard page adds **Mallorca** (the island, not a city, so
+kept out of the main comparison above) alongside Palma, with quarterly price detail back to 2001
+— the longest and only sub-annual history in this project so far.
 
 ## Methodology (summary)
 

@@ -19,6 +19,7 @@ from src.database.models import (
     IncomeIndex,
     InflationIndex,
     PropertyIndex,
+    PropertyIndexQuarterly,
     RentalPrice,
     SummaryMetric,
 )
@@ -40,14 +41,32 @@ def get_or_create_country(
 
 
 def get_or_create_city(
-    session: Session, *, name: str, country: Country, data_quality_note: str | None = None
+    session: Session,
+    *,
+    name: str,
+    country: Country,
+    place_type: str = "capital",
+    data_quality_note: str | None = None,
 ) -> City:
     city = session.scalar(select(City).where(City.name == name, City.country_id == country.id))
     if city is None:
-        city = City(name=name, country=country, data_quality_note=data_quality_note)
+        city = City(
+            name=name, country=country, place_type=place_type, data_quality_note=data_quality_note
+        )
         session.add(city)
         session.flush()
+    else:
+        city.place_type = place_type
+        city.data_quality_note = data_quality_note
     return city
+
+
+def set_city_parent(session: Session, *, city: City, parent: City | None) -> None:
+    """Set (or clear) a city's parent place. A separate step from `get_or_create_city` because a
+    parent may be defined later in `settings.PLACES` than its child — `seed.py` resolves all
+    parent links in a second pass, once every place has been created."""
+    city.parent = parent
+    session.flush()
 
 
 def get_or_create_data_source(
@@ -107,6 +126,36 @@ def upsert_property_index(
         session.add(row)
     else:
         row.index_value = index_value
+        row.source = source
+    session.flush()
+    return row
+
+
+def upsert_property_index_quarterly(
+    session: Session,
+    *,
+    country: Country,
+    city: City,
+    year: int,
+    quarter: int,
+    eur_per_sqm: float,
+    source: DataSource | None = None,
+) -> PropertyIndexQuarterly:
+    row = session.scalar(
+        select(PropertyIndexQuarterly).where(
+            PropertyIndexQuarterly.city_id == city.id,
+            PropertyIndexQuarterly.year == year,
+            PropertyIndexQuarterly.quarter == quarter,
+        )
+    )
+    if row is None:
+        row = PropertyIndexQuarterly(
+            country=country, city=city, year=year, quarter=quarter,
+            eur_per_sqm=eur_per_sqm, source=source,
+        )
+        session.add(row)
+    else:
+        row.eur_per_sqm = eur_per_sqm
         row.source = source
     session.flush()
     return row

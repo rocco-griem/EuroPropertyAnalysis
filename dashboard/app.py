@@ -28,10 +28,11 @@ pages = [
     st.Page("pages/2_Rankings.py", title="Rankings", icon="🏆"),
     st.Page("pages/3_Affordability.py", title="Affordability", icon="💶"),
     st.Page("pages/5_Rentals.py", title="Rentals", icon="🔑"),
+    st.Page("pages/6_Mallorca_Deep_Dive.py", title="Mallorca Deep Dive", icon="🏝️"),
     st.Page("pages/4_Methodology.py", title="Methodology", icon="📖"),
 ]
 pg = st.navigation(pages)
 
-st.sidebar.caption("Data: 2015–2024 · 9 European capitals")
+st.sidebar.caption("Data: 2015–2024 · 9 capitals + Palma · deep dive: Mallorca")
 
 pg.run()

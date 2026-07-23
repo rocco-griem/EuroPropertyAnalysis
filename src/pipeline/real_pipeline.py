@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from src.config.settings import CAPITALS
+from src.config.settings import PLACES
 from src.database.connection import get_session
 from src.database.repository import (
     get_city_by_name,
@@ -16,12 +16,14 @@ from src.database.repository import (
     upsert_income_index,
     upsert_inflation_index,
     upsert_property_index,
+    upsert_property_index_quarterly,
     upsert_rental_price,
 )
 from src.database.seed import seed_countries_and_cities
 from src.pipeline.compute_metrics import compute_city_metrics
 from src.pipeline.csv_loader import (
     load_city_property_index,
+    load_city_property_index_quarterly,
     load_city_rental_per_sqm,
     load_national_income_index,
     load_national_inflation_index,
@@ -70,10 +72,22 @@ _CITY_RENTAL_SOURCE = dict(
         "indicative — see docs/data_sources.md."
     ),
 )
+_CITY_PROPERTY_QUARTERLY_SOURCE = dict(
+    name="Tinsa IMIE Local Markets — quarterly EUR/m²",
+    url="https://www.tinsa.es/precio-vivienda/",
+    description=(
+        "Quarterly average appraised value (EUR/m²), 2001 Q1–present, read from Tinsa's public "
+        "price-history chart (same private, appraisal-based series as the annual Madrid/Palma "
+        "figures). Covers Palma de Mallorca (municipality) and Mallorca (proxied by Tinsa's "
+        "'Islas Baleares' province figure — no official series exists at the Mallorca-island "
+        "level; see docs/data_sources.md). The 2015–2024 annual rows in "
+        "city_property_index.csv are the mean of each year's 4 quarters from this same source."
+    ),
+)
 
 
 def load_real_raw_data(session: Session) -> None:
-    """Insert the real property/inflation/income series for every capital in `settings.CAPITALS`.
+    """Insert the real property/inflation/income series for every place in `settings.PLACES`.
 
     Cities must already exist (via `seed_countries_and_cities`).
     """
@@ -82,42 +96,49 @@ def load_real_raw_data(session: Session) -> None:
     national_income = load_national_income_index()
     city_property = load_city_property_index()
     city_rental = load_city_rental_per_sqm()
+    city_property_quarterly = load_city_property_index_quarterly()
 
     property_source = get_or_create_data_source(session, **_NATIONAL_PROPERTY_SOURCE)
     inflation_source = get_or_create_data_source(session, **_NATIONAL_INFLATION_SOURCE)
     income_source = get_or_create_data_source(session, **_NATIONAL_INCOME_SOURCE)
     city_source = get_or_create_data_source(session, **_CITY_PROPERTY_SOURCE)
     rental_source = get_or_create_data_source(session, **_CITY_RENTAL_SOURCE)
+    quarterly_source = get_or_create_data_source(session, **_CITY_PROPERTY_QUARTERLY_SOURCE)
 
-    for capital in CAPITALS:
-        city = get_city_by_name(session, capital.city)
+    for place in PLACES:
+        city = get_city_by_name(session, place.city)
         if city is None:
-            raise ValueError(f"City {capital.city!r} not seeded — run seed_countries_and_cities() first.")
+            raise ValueError(f"City {place.city!r} not seeded — run seed_countries_and_cities() first.")
         country = city.country
 
-        for year, value in national_property[capital.country].items():
+        for year, value in national_property[place.country].items():
             upsert_property_index(session, country=country, year=year, index_value=value, source=property_source)
-        for year, value in city_property[capital.city].items():
+        for year, value in city_property[place.city].items():
             upsert_property_index(
                 session, country=country, city=city, year=year, index_value=value, source=city_source
             )
-        for year, value in national_inflation[capital.country].items():
+        for year, value in national_inflation[place.country].items():
             upsert_inflation_index(session, country=country, year=year, cpi_value=value, source=inflation_source)
-        for year, value in national_income[capital.country].items():
+        for year, value in national_income[place.country].items():
             upsert_income_index(session, country=country, year=year, index_value=value, source=income_source)
-        for year, value in city_rental.get(capital.city, {}).items():
+        for year, value in city_rental.get(place.city, {}).items():
             upsert_rental_price(
                 session, country=country, city=city, year=year, rental_eur_sqm=value, source=rental_source
+            )
+        for (year, quarter), value in city_property_quarterly.get(place.city, {}).items():
+            upsert_property_index_quarterly(
+                session, country=country, city=city, year=year, quarter=quarter,
+                eur_per_sqm=value, source=quarterly_source,
             )
 
 
 def run_real_pipeline() -> None:
-    """Seed reference data, load the real raw series, and compute metrics for every capital."""
+    """Seed reference data, load the real raw series, and compute metrics for every place."""
     seed_countries_and_cities()
     with get_session() as session:
         load_real_raw_data(session)
-        for capital in CAPITALS:
-            city = get_city_by_name(session, capital.city)
+        for place in PLACES:
+            city = get_city_by_name(session, place.city)
             compute_city_metrics(session, city)
 
 

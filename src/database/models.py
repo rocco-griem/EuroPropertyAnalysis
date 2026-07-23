@@ -41,12 +41,19 @@ class City(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False)
+    # "capital" (the Version 1 set) | "city" (a non-capital city, e.g. Palma) | "island" (a
+    # region/island-level place shown only on its own deep-dive page, e.g. Mallorca). Analytics
+    # queries default to ("capital", "city") so an island never leaks into the main comparison.
+    place_type: Mapped[str] = mapped_column(String(20), nullable=False, default="capital")
+    # The containing place (e.g. Palma's parent is Mallorca), NULL if none. Self-referential.
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("cities.id"))
     # Set only for cities whose property index source is a methodological outlier (e.g. private/
     # appraisal-based rather than an official transaction statistic) — surfaced in the dashboard
     # so the caveat travels with the data instead of living only in docs/data_sources.md.
     data_quality_note: Mapped[str | None] = mapped_column(Text)
 
     country: Mapped["Country"] = relationship(back_populates="cities")
+    parent: Mapped["City | None"] = relationship(remote_side=[id])
 
     def __repr__(self) -> str:
         return f"City(id={self.id}, name={self.name!r}, country_id={self.country_id})"
@@ -95,6 +102,45 @@ class PropertyIndex(Base):
 
     def __repr__(self) -> str:
         return f"PropertyIndex(country_id={self.country_id}, city_id={self.city_id}, year={self.year})"
+
+
+class PropertyIndexQuarterly(Base):
+    """A raw quarterly property price value (EUR/m²), for places with sub-annual history.
+
+    Introduced in M9 for Palma/Mallorca, whose Tinsa source publishes quarterly back to 2001 —
+    far more history than the annual 2015-2024 series used everywhere else. Kept as its own
+    table rather than a nullable `quarter` column on `PropertyIndex`: that table's `city_id`
+    NULL-means-national convention already needs an application-level guard (see its docstring),
+    and a second NULL-able dimension on the same table would compound that. Values here are
+    absolute EUR/m² (as published), not rebased — annualised by averaging the 4 quarters to
+    populate `PropertyIndex` (so existing metrics/charts are unaffected); this table exists only
+    to power sub-annual detail (e.g. the Mallorca deep-dive page and, later, forecasting).
+    """
+
+    __tablename__ = "property_indices_quarterly"
+    __table_args__ = (
+        UniqueConstraint(
+            "country_id", "city_id", "year", "quarter", name="uq_property_index_q_scope_period"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False)
+    city_id: Mapped[int | None] = mapped_column(ForeignKey("cities.id"))
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    quarter: Mapped[int] = mapped_column(Integer, nullable=False)  # 1-4
+    eur_per_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    source_id: Mapped[int | None] = mapped_column(ForeignKey("data_sources.id"))
+
+    country: Mapped["Country"] = relationship()
+    city: Mapped["City | None"] = relationship()
+    source: Mapped["DataSource | None"] = relationship()
+
+    def __repr__(self) -> str:
+        return (
+            f"PropertyIndexQuarterly(city_id={self.city_id}, year={self.year}, "
+            f"quarter={self.quarter})"
+        )
 
 
 class RentalPrice(Base):

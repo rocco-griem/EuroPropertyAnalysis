@@ -8,4 +8,5 @@ pytest>=8.0
 ruff>=0.4
 jupyter>=1.0
 matplotlib>=3.8      # optional, exploration notebooks only
-requests>=2.31       # optional, for future API fetch helpers (not on the V1 critical path)
+requests>=2.31       # used by src/tools/fetch_map_imagery.py (NASA GIBS hero imagery fetch)
+pillow>=10.0         # used by src/tools/fetch_map_imagery.py to stitch/convert fetched imagery

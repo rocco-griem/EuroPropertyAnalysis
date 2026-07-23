@@ -7,6 +7,12 @@ The categorical city palette was validated for the dark chart surface with the `
 skill's palette validator (9 slots, lightness band + chroma + CVD floor + contrast all pass;
 worst adjacent CVD ΔE 9.7 — the 8–12 floor band, which is legal here because every chart
 carries a legend and hover tooltip, so a city is never identified by color alone).
+
+M9 (2026-07-23) added Palma/Mallorca as slots 10-11 (`#6f7bd6` indigo, `#a3852c` bronze),
+re-validated as an 11-slot palette (worst adjacent CVD ΔE 6.5, same pre-existing pair, still in
+the legal floor band). The two new colors were *appended*, not re-sorted in with the rest —
+`CANONICAL_CITIES` fixes the original 9's order first and appends any newer places after, so
+none of the original 9 cities' colors shift slots.
 """
 
 from __future__ import annotations
@@ -37,7 +43,9 @@ GOOD = "#3FB984"
 BAD = "#E5635B"
 
 # Fixed categorical order — assign to cities in a deterministic (sorted) order so every city
-# keeps the same color on every page. Validated set/order; do not reorder casually.
+# keeps the same color on every page. Validated set/order; do not reorder casually. Slots 10-11
+# (indigo, bronze) were appended for Palma/Mallorca in M9 — never insert a new color mid-list,
+# since that would shift every later city's slot and repaint it.
 CITY_COLORS = [
     "#3987e5",  # blue
     "#d9622b",  # orange
@@ -48,6 +56,8 @@ CITY_COLORS = [
     "#c47f22",  # amber
     "#d55181",  # magenta
     "#4a9e42",  # green
+    "#6f7bd6",  # indigo
+    "#a3852c",  # bronze
 ]
 
 # Single-hue amber ramp for sequential (ranked-bar) encoding, light -> dark.
@@ -60,9 +70,18 @@ AMBER_SCALE = [
 FONT_FAMILY = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
 
 
-# Canonical, deterministic city order — every known capital gets a fixed palette slot, so a
-# city keeps the same color no matter which subset is selected or which page it's on.
-CANONICAL_CITIES = sorted(c.city for c in settings.CAPITALS)
+# Canonical, deterministic city order — every known place gets a fixed palette slot, so a city
+# keeps the same color no matter which subset is selected or which page it's on. The original 9
+# capitals keep their historical alphabetical order (frozen here, not re-derived) so that any
+# place added later — regardless of where it sorts alphabetically — is appended after them
+# rather than potentially inserted in the middle, which would shift and repaint existing cities.
+_ORIGINAL_9_CAPITALS = [
+    "Amsterdam", "Berlin", "Budapest", "London", "Madrid", "Paris", "Prague", "Vienna", "Warsaw",
+]
+_all_places = sorted(p.city for p in settings.PLACES)
+CANONICAL_CITIES = _ORIGINAL_9_CAPITALS + [
+    city for city in _all_places if city not in _ORIGINAL_9_CAPITALS
+]
 _CITY_COLOR = {city: CITY_COLORS[i % len(CITY_COLORS)] for i, city in enumerate(CANONICAL_CITIES)}
 
 
@@ -211,17 +230,23 @@ _COLUMN_CONFIG = {
 
 
 def styled_dataframe(df: "pd.DataFrame") -> None:
-    """Render a dataframe with friendly headers, number formatting, and no index."""
+    """Render a dataframe with friendly headers, number formatting, and no index.
+
+    Only columns with an entry in `_COLUMN_CONFIG` are shown — a column the analytics service
+    returns for filtering/joining purposes only (e.g. `place_type`, `parent`) but that isn't
+    meant to be end-user-facing simply doesn't appear, rather than falling through with a raw
+    column name. Callers that do want such a column displayed should add it to `_COLUMN_CONFIG`.
+    """
     df = df.copy()
     # Blank out empty text cells so the table shows "" rather than a literal "None".
     for col in ("data_quality_note", "country"):
         if col in df.columns:
             df[col] = df[col].fillna("")
+    shown_cols = [col for col in df.columns if col in _COLUMN_CONFIG]
+    df = df[shown_cols]
     config = {}
-    for col in df.columns:
-        spec = _COLUMN_CONFIG.get(col)
-        if spec is None:
-            continue
+    for col in shown_cols:
+        spec = _COLUMN_CONFIG[col]
         if "format" in spec:
             config[col] = st.column_config.NumberColumn(spec["label"], format=spec["format"])
         else:

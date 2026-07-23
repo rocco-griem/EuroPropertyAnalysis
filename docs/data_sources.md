@@ -157,3 +157,82 @@ listed, so those years use the single published value.
   though London/Warsaw/Prague/Budapest transact in non-euro currencies.
 - Unlike the property/income series, rent is stored as an **absolute €/m² level**, not a rebased
   index — it is shown as published, and "rent CAGR" is computed over the years actually present.
+
+## M9 — Palma and Mallorca (2026-07-23)
+
+Palma and Mallorca were added as places of special interest, requested by name. Palma joins the
+main capitals-and-cities comparison (it is a city, and the Balearic Islands' regional capital);
+Mallorca (the island) is shown only on the dedicated Mallorca Deep Dive page.
+
+**Property index — both from Tinsa IMIE Local Markets**, the same private, appraisal-based
+source already used for Madrid:
+
+| Place | Tinsa page | What it actually measures |
+|---|---|---|
+| Palma | `tinsa.es/precio-vivienda/islas-baleares/palma-de-mallorca/` | Palma de Mallorca municipality |
+| Mallorca | `tinsa.es/precio-vivienda/islas-baleares/` | **Proxy**: the whole Balearic Islands province (Mallorca + Menorca + Ibiza/Formentera) |
+
+**No official Mallorca-island-specific price series exists.** This was checked directly, not
+assumed: IBESTAT (the Balearic statistics office) does publish a housing-price table broken
+down by island, but it's a different statistic (dwelling-stock characteristics, base year
+2021 only) — its actual quarterly *price* tables ("Valor taxat de l'habitatge") stop at the
+region level (all Balearics) and the >25,000-inhabitant municipality level (Palma), with no
+island-level cut in between. Spain's national INE house-price index (IPV) is also
+region-level only. Tinsa's own site has no dedicated "Mallorca" page either — only the
+province-wide "Islas Baleares" page and the Palma municipality page. Given that, **Mallorca's
+series here is Tinsa's Balearic Islands province figure**, used as the closest available proxy
+(Mallorca holds the large majority of the region's population and housing stock) and flagged
+via `City.data_quality_note` — see the fallback order this followed in the M9 plan.
+
+Both series were extracted the same way as Madrid's: each Tinsa price-history page embeds its
+full chart data directly in the page's JS (`categories: [...]` quarterly labels + a `data: [...]`
+array in the "evolucion-precio-vivienda" chart, distinct from a second "Variación interanual"
+%-change chart on the same page — the two must not be confused). **Quarterly, 2001 Q1–2026 Q2**
+(102 quarters), the longest available history and the only quarterly series in this project so
+far — committed as `data/raw/city_property_index_quarterly.csv` (columns: `city, year, quarter,
+eur_per_sqm`). The annual rows in `city_property_index.csv` (2015–2024, added to the same file
+Palma/Madrid/etc. already use) are the mean of each year's 4 quarters from this same data.
+
+Extraction was validated against Tinsa's own published figures, not just internal consistency:
+Q1 2026 = €3,448.54/m² (Tinsa's own site states "≈3,449"), Q2 2026 = €3,478.28/m² (Tinsa states
+"3,478"). The quarterly series also reproduces the 2008 peak (~€2,599/m², Q1 2008) and the
+trough of the following crash, both matching the well-documented shape of Spanish/Balearic
+housing history.
+
+**Rent (€/m²) is not yet available for Palma or Mallorca.** Deloitte, the source for every other
+city's rent figure, doesn't cover either place. Spain's SERPAVI (Sistema Estatal de Referencia
+del Precio del Alquiler de Vivienda, Ministerio de Vivienda) does publish official,
+tax-record-based municipal rent data 2011–2024 and would cover both — but its public interface
+is an interactive map viewer (serpavi.mivau.gob.es) whose underlying per-municipality
+Excel/CSV downloads could not be reached via automated fetching within the time spent on this
+milestone (no discoverable stable file URL or REST/ArcGIS endpoint). This is tracked as a
+follow-up, not silently dropped — see the Mallorca Deep Dive page, which states the gap
+explicitly.
+
+Fetch/extraction script kept only in scratch, not committed — same pattern as every other
+acquisition script in this project (M7b/M7c): a one-off tool, not part of the reusable pipeline.
+
+## Overview-page hero imagery
+
+The Overview page's scroll-driven day→night hero (both the flat map and the 3D globe variants,
+`dashboard/components/hero_map.py` / `hero_globe.py`) is textured with real NASA satellite
+photography, not illustration:
+
+| Layer | GIBS layer identifier | `TIME` | Source |
+|---|---|---|---|
+| Daylight | `BlueMarble_NextGeneration` | none (static composite) | NASA Blue Marble: Next Generation |
+| Night lights | `VIIRS_Black_Marble` | `2016-01-01` | Suomi NPP VIIRS Black Marble |
+
+Fetched via NASA's public **GIBS WMS** service (`gibs.earthdata.nasa.gov/wms/{epsg4326,epsg3857}/best/wms.cgi`,
+`GetMap`, `FORMAT=image/jpeg`) — no API key required. `src/tools/fetch_map_imagery.py` fetches
+four crops once, converts them to WebP, and the output is **committed** to `dashboard/static/`:
+
+- `earth_day.webp` / `earth_night.webp` — whole-globe equirectangular (EPSG:4326), 4096×2048, for
+  the 3D globe hero.
+- `europe_day.webp` / `europe_night.webp` — Web-Mercator Europe crop (EPSG:3857), lon −25…40 /
+  lat 33…60, 3072×1912, for the flat hero (bounds must match `hero_assets.EUROPE_LON`/`EUROPE_LAT`).
+
+NASA imagery is in the **public domain** (no copyright restriction on reuse), with attribution
+requested as a courtesy — the hero caption credits "NASA Blue Marble / Black Marble (VIIRS)".
+Re-running the fetch script (`python -m src.tools.fetch_map_imagery`, `requests`+`Pillow`, both
+dev-only deps) regenerates all four files from scratch; nothing else depends on it at runtime.

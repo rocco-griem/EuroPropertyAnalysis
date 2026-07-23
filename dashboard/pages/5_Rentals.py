@@ -62,5 +62,7 @@ st.caption(
     "Source: Deloitte Property Index (annual editions 2017–2025, covering rent years 2016–2024). "
     "London is the mean of the published inner/outer figures. Deloitte's rent methodology and "
     "labels vary across editions (average vs. asking rent), so early-year and cross-city "
-    "comparisons are indicative — see the Methodology page for detail."
+    "comparisons are indicative — see the Methodology page for detail. Palma isn't in Deloitte's "
+    "coverage, so it has no rent data here yet — see the Mallorca Deep Dive page for its "
+    "property-price detail."
 )

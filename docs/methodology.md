@@ -2,17 +2,28 @@
 
 ## Data
 
-Nine European capitals, **2015–2024**: London, Paris, Berlin, Madrid, Amsterdam, Vienna, Warsaw,
-Prague, Budapest. A tenth candidate, Lisbon, was evaluated and excluded — its municipal series is
-fragmented across incompatible statistical-methodology vintages with no clean period-length
-coverage. Full per-country and per-city source list (Eurostat, ONS/Land Registry, INSEE, CBS,
-OeNB, MNB, NBP, vdp Research, ČSÚ, Tinsa, OECD): [`docs/data_sources.md`](data_sources.md).
+Nine European capitals plus Palma, **2015–2024**: London, Paris, Berlin, Madrid, Amsterdam,
+Vienna, Warsaw, Prague, Budapest, Palma. A tenth capital candidate, Lisbon, was evaluated and
+excluded — its municipal series is fragmented across incompatible statistical-methodology
+vintages with no clean period-length coverage. Full per-country and per-city source list
+(Eurostat, ONS/Land Registry, INSEE, CBS, OeNB, MNB, NBP, vdp Research, ČSÚ, Tinsa, OECD):
+[`docs/data_sources.md`](data_sources.md).
+
+**Palma** (added M9) is not a national capital, but is the Balearic Islands' regional capital, so
+the "city vs. national market" comparison still applies unchanged; it is grouped with the other
+cities via `City.place_type` rather than a separate framework. **Mallorca** (the island as a
+whole) is a different kind of addition — not a city, and not part of this main comparison — shown
+only on the dedicated Mallorca Deep Dive page (`place_type="island"`). No official price series
+exists at the Mallorca-island level, so its series is a documented proxy (Tinsa's Balearic
+Islands province figure); see `docs/data_sources.md` for the full reasoning and rejected
+alternatives.
 
 Every included city has a **true city-level property price index** — national figures are never
-substituted for missing city data. One exception is flagged rather than hidden: **Madrid's** index
-is Tinsa IMIE Local Markets, a private, appraisal-based series, not an official transaction
-statistic like every other city here. This caveat is also surfaced directly in the dashboard via
-`City.data_quality_note`.
+substituted for missing city data. Exceptions are flagged rather than hidden: **Madrid** and
+**Palma** are both Tinsa IMIE Local Markets, a private, appraisal-based series, not an official
+transaction statistic like every other city here; **Mallorca** additionally uses Tinsa's
+region-wide Balearic Islands figure as a proxy, since no Mallorca-island-specific series exists
+at all. These caveats are also surfaced directly in the dashboard via `City.data_quality_note`.
 
 Income data is available only at **country level**, not city level, in every source found — so
 affordability pressure compares a city's property prices against its *national* income growth, not
