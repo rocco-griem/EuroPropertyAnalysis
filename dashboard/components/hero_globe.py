@@ -7,12 +7,20 @@ raw WebGL — no three.js. A globe is one full-screen quad plus a per-pixel ray/
 fragment shader (orthographic projection), which is ~100 lines of GLSL; vendoring a ~600 KB 3D
 library to draw one sphere would work against keeping this dashboard small and offline-capable.
 
-Scroll (within the hero's own scroll region, same sticky-over-tall-track mechanic as `hero_map`)
-drives two independent things in world space, so they stay correct regardless of each other:
-  - the view rotation (which longitude faces the camera), giving a sense of the globe spinning;
-  - the subsolar point's longitude, which sweeps from "noon over Europe" to "midnight over
-    Europe" as you scroll — a physically-shaped terminator (`dot(surface normal, sun direction)`),
-    not a crossfade.
+The hero plays as a single sequence, driven by scroll within its own scroll region (same
+sticky-over-tall-track mechanic as `hero_map`):
+  1. Before any scroll, the globe sits zoomed out ("in space") and idle-spins on its own via a
+     time-based `requestAnimationFrame` loop.
+  2. The first scroll freezes the idle spin and hands rotation over to scroll position: scrolling
+     zooms the globe in while it finishes rotating onto Europe, continuing seamlessly from
+     wherever the idle spin left off (no jump).
+  3. The zoom lands at the same lat-band framing `hero_map.py` uses (`LAT_TOP`/`LAT_BOTTOM` around
+     `CENTER_LON`), computed at runtime from the same forward-projection math used for city
+     markers. Once landed (tracked via a high-water-mark on scroll progress), rotation and zoom
+     lock — scrolling back up cannot re-zoom or re-spin.
+  4. Only then does further scroll drive the day->night terminator sweep — a physically-shaped
+     terminator (`dot(surface normal, sun direction)`, not a crossfade) — bidirectionally, exactly
+     like before.
 The 9 capitals are projected to screen space with the same rotation math and drawn as a 2D canvas
 overlay on top of the WebGL canvas (hidden once they rotate to the far side of the globe).
 
@@ -61,7 +69,7 @@ _TEMPLATE = r"""
     <canvas id="overlayCanvas"></canvas>
     <div class="hero-caption">
       <span class="hero-eyebrow">10 European cities &mdash; globe</span>
-      <span class="hero-hint" id="heroHint">Scroll &darr; &nbsp;rotate &amp; day to night</span>
+      <span class="hero-hint" id="heroHint">Scroll &darr; &nbsp;zoom into Europe</span>
       <span class="hero-credit">Imagery: NASA Blue Marble / Black Marble (VIIRS)</span>
     </div>
   </div>
@@ -81,7 +89,7 @@ _TEMPLATE = r"""
     display: block; position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 16px;
   }
   #overlayCanvas { pointer-events: none; }
-  .hero-track { height: 260vh; }
+  .hero-track { height: 340vh; }
   .hero-caption {
     position: absolute; left: 18px; bottom: 16px; display: flex; flex-direction: column;
     gap: 4px; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -102,9 +110,15 @@ _TEMPLATE = r"""
   const ACCENT_LIGHT = "__ACCENT_LIGHT__";
   const DAY_URL = "__DAY_URL__";
   const NIGHT_URL = "__NIGHT_URL__";
+  const CENTER_LON_DEG = __CENTER_LON_DEG__;
   const CENTER_LON = __CENTER_LON_DEG__ * Math.PI / 180;
   const CENTER_LAT = __CENTER_LAT_DEG__ * Math.PI / 180;
-  const GLOBE_RADIUS = 0.86; // fraction of min(W,H)/2
+  const ZOOM_OUT_RADIUS = 0.42; // fraction of min(W,H)/2 — "planet in space" starting framing
+  // Lat band that must fill the viewport height once landed — must match hero_map.py's
+  // LAT_TOP/LAT_BOTTOM so the globe's landed framing matches the flat map's exactly.
+  const LAT_TOP = 55.5, LAT_BOTTOM = 37.5;
+  let landedRadius = 0.86; // recomputed per-viewport in resize(), via computeLandedRadius()
+  const ZOOM_PHASE_END = 0.4; // fraction of scroll spent zooming in vs. driving day/night
 
   const wrap = document.getElementById('heroWrap');
   const glCanvas = document.getElementById('glCanvas');
@@ -255,18 +269,44 @@ _TEMPLATE = r"""
     overlay.width = Math.round(W * dpr); overlay.height = Math.round(H * dpr);
     octx.setTransform(dpr, 0, 0, dpr, 0, 0);
     gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+    landedRadius = computeLandedRadius();
     draw();
   }
 
-  let progress = 0;
-  function lon0() { return CENTER_LON + (-15 + progress*30) * Math.PI / 180; }
-  function sunLon() { return CENTER_LON + progress * Math.PI; } // noon over Europe -> midnight
+  let progress = 0;    // 0-1, live scroll position — drives day/night bidirectionally
+  let maxProgress = 0; // high-water mark of progress — drives zoom/rotation, never decreases
 
-  // Forward view-space transform (mirrors the shader's inverse), used to place city markers.
-  function toView(lonDeg, latDeg) {
+  // Idle auto-spin: runs only until the first scroll, then freezes so the scroll-driven sweep
+  // continues from exactly where it left off (no visual jump at the handoff).
+  let idling = !reduceMotion;
+  let spinBase = 0;     // radians, grows while idling
+  let frozenOffset = 0; // spinBase (normalized to (-PI,PI]) captured at the moment idling ends
+  function normalizeAngle(a) { return Math.atan2(Math.sin(a), Math.cos(a)); }
+
+  function ease(t) { return t*t*(3 - 2*t); } // smoothstep, matches hero_map.py's easing
+
+  function zoomT() { return Math.min(1, maxProgress / ZOOM_PHASE_END); }
+  function nightT() {
+    return Math.max(0, Math.min(1, (progress - ZOOM_PHASE_END) / (1 - ZOOM_PHASE_END)));
+  }
+
+  function lon0() {
+    if (idling) return CENTER_LON + spinBase;
+    // Sweeps from wherever idle spin froze back to exactly CENTER_LON as zoomT goes 0->1, so the
+    // globe always lands dead-centered on Europe regardless of the idle spin's starting angle.
+    const offset = frozenOffset * (1 - ease(zoomT()));
+    return CENTER_LON + offset;
+  }
+  function sunLon() { return CENTER_LON + nightT() * Math.PI; } // noon over Europe -> midnight
+  function globeRadius() { return ZOOM_OUT_RADIUS + (landedRadius - ZOOM_OUT_RADIUS) * ease(zoomT()); }
+
+  // Forward view-space transform (mirrors the shader's inverse), used to place city markers and
+  // (with an explicit L0) to solve for the landed zoom that matches hero_map.py's framing.
+  function toView(lonDeg, latDeg, L0) {
     const lon = lonDeg * Math.PI / 180, lat = latDeg * Math.PI / 180;
     const x = Math.cos(lat) * Math.sin(lon), y = Math.sin(lat), z = Math.cos(lat) * Math.cos(lon);
-    const L0 = lon0(), B0 = CENTER_LAT;
+    if (L0 === undefined) L0 = lon0();
+    const B0 = CENTER_LAT;
     const x1 = x*Math.cos(L0) - z*Math.sin(L0);
     const z1 = x*Math.sin(L0) + z*Math.cos(L0);
     const y1 = y;
@@ -276,9 +316,21 @@ _TEMPLATE = r"""
     return { x: x2, y: y2, z: z2 };
   }
 
+  // Solve for the GLOBE_RADIUS fraction at which the LAT_TOP..LAT_BOTTOM band (centered on
+  // CENTER_LON, viewed head-on) fills the full viewport height — matching hero_map.py's crop.
+  function computeLandedRadius() {
+    if (!H) return landedRadius;
+    const top = toView(CENTER_LON_DEG, LAT_TOP, CENTER_LON);
+    const bot = toView(CENTER_LON_DEG, LAT_BOTTOM, CENTER_LON);
+    const dy = top.y - bot.y;
+    if (dy <= 0) return landedRadius;
+    const rpxNeeded = H / dy;
+    return rpxNeeded / (Math.min(W, H) / 2);
+  }
+
   function drawOverlay() {
     octx.clearRect(0, 0, W, H);
-    const Rpx = GLOBE_RADIUS * Math.min(W, H) / 2;
+    const Rpx = globeRadius() * Math.min(W, H) / 2;
     const pulse = reduceMotion ? 1 : (0.85 + 0.15*Math.sin(Date.now()/650));
     octx.textBaseline = 'middle';
     octx.font = '600 12px Inter, system-ui, sans-serif';
@@ -310,7 +362,7 @@ _TEMPLATE = r"""
     gl.uniform1f(uLon0, lon0());
     gl.uniform1f(uLat0, CENTER_LAT);
     gl.uniform1f(uSunLon, sunLon());
-    gl.uniform1f(uGlobeRadius, GLOBE_RADIUS);
+    gl.uniform1f(uGlobeRadius, globeRadius());
     gl.uniform3f(uRimColor, ACCENT_RGB[0]/255, ACCENT_RGB[1]/255, ACCENT_RGB[2]/255);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, dayTex); gl.uniform1i(uDayTex, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, nightTex); gl.uniform1i(uNightTex, 1);
@@ -321,20 +373,50 @@ _TEMPLATE = r"""
   let raf = null;
   function requestDraw() { if (raf) return; raf = requestAnimationFrame(function() { raf = null; draw(); }); }
 
+  function updateHint() {
+    if (!hint) return;
+    if (maxProgress < ZOOM_PHASE_END) {
+      hint.textContent = 'Scroll ↓  zoom into Europe';
+      hint.style.opacity = String(Math.max(0.35, 0.85 - zoomT()*0.5));
+    } else {
+      hint.textContent = 'Scroll ↓  day to night';
+      hint.style.opacity = String(Math.max(0, 0.85 - nightT()*1.3));
+    }
+  }
+
   function onScroll() {
     const max = wrap.scrollHeight - wrap.clientHeight;
     progress = max > 0 ? Math.min(1, Math.max(0, wrap.scrollTop / max)) : 0;
-    if (hint) hint.style.opacity = String(Math.max(0, 0.85 - progress*1.3));
+    if (progress > 0 && idling) {
+      idling = false;
+      frozenOffset = normalizeAngle(spinBase);
+    }
+    maxProgress = Math.max(maxProgress, progress);
+    updateHint();
     requestDraw();
   }
 
   window.addEventListener('resize', resize);
   wrap.addEventListener('scroll', onScroll, { passive: true });
 
-  if (reduceMotion) { progress = 1; }
+  if (reduceMotion) { progress = 1; maxProgress = 1; idling = false; }
   resize();
+  updateHint();
   if (!reduceMotion) {
     setInterval(function() { if (progress > 0.1) requestDraw(); }, 90);
+    // Idle auto-spin, time-based (not scroll-driven) — freezes itself the moment onScroll sees
+    // the first nonzero progress (see `idling` above).
+    let lastT = null;
+    function idleTick(ts) {
+      if (!idling) return;
+      if (lastT !== null) {
+        spinBase += (ts - lastT) / 1000 * (2*Math.PI / 40); // one full rotation per ~40s
+      }
+      lastT = ts;
+      requestDraw();
+      requestAnimationFrame(idleTick);
+    }
+    requestAnimationFrame(idleTick);
   }
 
   // --- Fallback: no WebGL -> flat vector silhouette, never render blank --------------------
