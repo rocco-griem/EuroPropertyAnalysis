@@ -212,6 +212,20 @@ explicitly.
 Fetch/extraction script kept only in scratch, not committed — same pattern as every other
 acquisition script in this project (M7b/M7c): a one-off tool, not part of the reusable pipeline.
 
+## A note on the Deloitte and Tinsa data
+
+Unlike the Eurostat/ONS/OECD/CBS/etc. series above, **Deloitte's Property Index** (rents) and
+**Tinsa's IMIE Local Markets** (Madrid/Palma/Mallorca property prices) are private, commercial
+publishers with no stated open-data or redistribution licence. Their individual figures are
+transcribed/extracted here from their own publicly published reports and web pages — not copied
+wholesale — cited by name with a source URL and access date on every `DataSource` row and
+surfaced with a caveat on every affected dashboard page and `City.data_quality_note`. This project
+is a personal, non-commercial analytics portfolio, not a redistribution of either publisher's
+product or a commercial substitute for it. If you plan to reuse `city_rental_per_sqm.csv`,
+`city_property_index.csv` (Madrid/Palma/Mallorca rows), or `city_property_index_quarterly.csv`
+beyond that kind of use, verify Deloitte's and Tinsa's own terms first — this repo makes no claim
+to redistribution rights over their data.
+
 ## Overview-page hero imagery
 
 The Overview page's scroll-driven day→night hero (both the flat map and the 3D globe variants,
@@ -236,3 +250,7 @@ NASA imagery is in the **public domain** (no copyright restriction on reuse), wi
 requested as a courtesy — the hero caption credits "NASA Blue Marble / Black Marble (VIIRS)".
 Re-running the fetch script (`python -m src.tools.fetch_map_imagery`, `requests`+`Pillow`, both
 dev-only deps) regenerates all four files from scratch; nothing else depends on it at runtime.
+
+The Europe outline drawn over the flat hero (`dashboard/components/assets/europe.geojson`) is
+[Natural Earth](https://www.naturalearthdata.com/) 110m admin-0 countries — also public domain,
+no attribution required.

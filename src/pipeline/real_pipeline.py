@@ -1,6 +1,5 @@
 """End-to-end real-data pipeline: committed CSVs in `data/raw/` -> database -> computed metrics.
 
-Replaces `mock_pipeline` now that real series have been sourced (see `docs/data_sources.md`).
 Run directly: `python -m src.pipeline.real_pipeline`
 """
 
