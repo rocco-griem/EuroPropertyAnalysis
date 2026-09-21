@@ -1,5 +1,7 @@
 # EuroPropertyAnalysis
 
+[![CI](https://github.com/rocco-griem/EuroPropertyAnalysis/actions/workflows/ci.yml/badge.svg)](https://github.com/rocco-griem/EuroPropertyAnalysis/actions/workflows/ci.yml)
+
 A Python analytics project comparing residential property market performance across nine European
 capital cities — plus Palma — from **2015 to 2024**, benchmarked against each country's wider
 national housing market — built end to end from raw statistical-office data to a live dashboard.
@@ -13,8 +15,9 @@ risk-adjusted basis?
 
 ## Live dashboard
 
-_Not yet deployed — runs locally, see "How to run locally" below. Live link coming soon
-(Streamlit Community Cloud)._
+**Live demo:** <LINK>
+
+Or run it locally — see "How to run locally" below.
 
 ## Dashboard preview
 
@@ -78,6 +81,85 @@ Full details: [`docs/methodology.md`](docs/methodology.md).
 
 Python · pandas · numpy · SQLite · SQLAlchemy · Plotly · Streamlit · pytest
 
+## Architecture
+
+The codebase is layered so each piece is independently testable and the dashboard never touches
+data logic directly:
+
+- **`config`** — single source of truth for filesystem paths, the database URL, and the
+  city/country definitions every other layer imports.
+- **`database`** — SQLAlchemy ORM models (`models.py`), a `repository.py` of query/upsert
+  functions that every other layer goes through instead of writing raw SQLAlchemy queries, and
+  `connection.py` for engine/session setup.
+- **`pipeline`** — loads the committed CSVs (`csv_loader.py`), orchestrates writing raw rows into
+  the database via the repository, then drives metric computation (`compute_metrics.py`) end to
+  end (`real_pipeline.py`).
+- **`metrics` / `transformation`** — pure functions only (no I/O): CAGR, volatility,
+  risk-adjusted return, affordability pressure, rebasing, inflation adjustment. Called by
+  `pipeline/compute_metrics.py`, unit-tested in isolation.
+- **`services`** — `analytics.py`, the only module the dashboard is allowed to query through;
+  every function takes a `Session` and returns a `pandas.DataFrame` shaped for one chart or table.
+- **`dashboard`** — Streamlit UI. Read-only: it calls `services.analytics`, never SQLAlchemy or
+  the database directly.
+
+```mermaid
+flowchart LR
+    CSV[("data/raw/*.csv")] --> Loader["pipeline/csv_loader"]
+    Loader --> Pipeline["pipeline/real_pipeline"]
+    Pipeline --> Repo["database/repository"]
+    Repo --> DB[("SQLite database")]
+    DB --> Calc["metrics/ + transformation/\n(pure functions)"]
+    Calc --> Pipeline
+    DB --> Services["services/analytics"]
+    Services --> Dashboard["dashboard/ (Streamlit)"]
+    Config["config/settings"] -.-> Loader
+    Config -.-> Repo
+    Config -.-> Services
+```
+
+Data flows one way: raw CSVs are loaded and written to the database through the repository, the
+pipeline reads those raw rows back out, runs them through the pure metric/transformation
+functions, and writes the computed results to their own tables (`annual_metrics`,
+`summary_metrics`) — again through the repository. The dashboard only ever reads the finished
+result through `services.analytics`.
+
+## Design decisions
+
+- **Metrics are pure functions.** `src/metrics` and `src/transformation` take plain numbers/dicts
+  in and return plain numbers/dicts out — no database, no Streamlit. That makes every formula
+  independently unit-testable and reusable outside the dashboard.
+- **A repository layer, not raw queries everywhere.** `src/database/repository.py` is the only
+  place that writes SQLAlchemy queries; the pipeline and the dashboard's `services` layer both go
+  through it. One place to fix a query bug, one place to reason about the schema.
+- **SQLite + SQLAlchemy, not a bigger database.** The dataset is small (a handful of European
+  cities, 2015–2024) and the app is a single-reader dashboard, so SQLite is enough; SQLAlchemy's
+  ORM keeps the schema declarative and the `DATABASE_URL` swappable to Postgres later without
+  touching calling code.
+- **Data-quality caveats travel with the data, not just the docs.** Where a source is a
+  methodological outlier (e.g. Madrid/Palma's private, appraisal-based Tinsa series), that's a
+  `City.data_quality_note` column, not only a line in `docs/data_sources.md` — so it surfaces
+  directly on the dashboard pages that use it.
+- **The database is generated, not committed.** `data/database/*.db` is gitignored; every
+  dashboard page calls `ensure_database()` on load, which builds and seeds the database from the
+  committed CSVs if it's empty. That's what makes a cold Streamlit Cloud deploy work without a
+  manual seeding step.
+
+## Testing
+
+`pytest` covers the pure metric/transformation functions (`test_returns.py`, `test_risk.py`,
+`test_affordability.py`, `test_rebasing.py`, `test_inflation_adjustment.py`), the database layer
+(`test_database.py`), CSV loading (`test_csv_loader.py`), the end-to-end pipeline
+(`test_pipeline.py`, `test_real_pipeline.py`), the dashboard's query layer
+(`test_services.py`), and the hero-imagery fetch tooling (`test_hero_imagery.py`) — each against
+an in-memory SQLite database, not the real one. Run the full suite with:
+
+```bat
+pytest
+```
+
+CI (`.github/workflows/ci.yml`) runs `ruff check`, `ruff format --check`, and `pytest` on every
+push and pull request to `main`.
+
 ## How to run locally (Windows)
 
 ```bat
@@ -116,4 +198,16 @@ docs/              methodology and data-source notes
 ## Future extensions
 
 Forecasting · machine learning · rental yield · currency-adjusted returns · mortgage affordability
-· PostgreSQL · FastAPI · CI/CD · data-quality dashboards.
+· PostgreSQL · FastAPI · data-quality dashboards.
+
+## How this was built
+
+Developed with [Claude Code](https://claude.com/claude-code) as an AI pair-programmer. I was
+responsible for the project scope, data sourcing and evaluation, the methodology, the
+architecture decisions, and for reviewing the resulting code.
+
+## License
+
+Code is licensed under the [MIT License](LICENSE). The underlying data remains under each
+original source's own terms — see [`docs/data_sources.md`](docs/data_sources.md) for the
+per-source breakdown and licensing notes.
