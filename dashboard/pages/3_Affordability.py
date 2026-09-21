@@ -30,7 +30,9 @@ with get_session() as session:
 
 st.subheader("Affordability pressure over time")
 st.plotly_chart(
-    charts.metric_line_chart(annual_df, "affordability_pressure_pct", "Affordability pressure (pp)"),
+    charts.metric_line_chart(
+        annual_df, "affordability_pressure_pct", "Affordability pressure (pp)"
+    ),
     width="stretch",
 )
 
@@ -43,7 +45,9 @@ st.plotly_chart(
 )
 
 st.subheader("Capital vs. national market gap over time")
-st.caption("A capital's cumulative growth minus its country's cumulative growth, in percentage points.")
+st.caption(
+    "A capital's cumulative growth minus its country's cumulative growth, in percentage points."
+)
 gap_fig = charts.metric_line_chart(
     annual_df, "capital_vs_national_gap_pct", "Capital vs national gap (pp)"
 )

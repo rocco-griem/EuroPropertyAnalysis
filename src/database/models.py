@@ -101,7 +101,9 @@ class PropertyIndex(Base):
     source: Mapped["DataSource | None"] = relationship()
 
     def __repr__(self) -> str:
-        return f"PropertyIndex(country_id={self.country_id}, city_id={self.city_id}, year={self.year})"
+        return (
+            f"PropertyIndex(country_id={self.country_id}, city_id={self.city_id}, year={self.year})"
+        )
 
 
 class PropertyIndexQuarterly(Base):
@@ -152,9 +154,7 @@ class RentalPrice(Base):
     """
 
     __tablename__ = "rental_prices"
-    __table_args__ = (
-        UniqueConstraint("city_id", "year", name="uq_rental_price_city_year"),
-    )
+    __table_args__ = (UniqueConstraint("city_id", "year", name="uq_rental_price_city_year"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False)

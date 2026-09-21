@@ -47,7 +47,7 @@ def render_data_quality_notes(summary_df: pd.DataFrame) -> None:
         return
     pills = [
         f'<span class="ep-flag">⚠️ <b>{html.escape(str(row["city"]))}</b> '
-        f'{html.escape(str(row["data_quality_note"]))}</span>'
+        f"{html.escape(str(row['data_quality_note']))}</span>"
         for _, row in flagged.iterrows()
     ]
-    st.markdown(f'<div>{"".join(pills)}</div>', unsafe_allow_html=True)
+    st.markdown(f"<div>{''.join(pills)}</div>", unsafe_allow_html=True)

@@ -62,8 +62,9 @@ def _europe_bbox_3857() -> tuple[float, float, float, float, int]:
     return x0, y0, x1, y1, height
 
 
-def _get_map(base_url: str, layer: str, bbox: str, srs: str, width: int, height: int,
-             time: str | None = None) -> bytes:
+def _get_map(
+    base_url: str, layer: str, bbox: str, srs: str, width: int, height: int, time: str | None = None
+) -> bytes:
     params = {
         "SERVICE": "WMS",
         "VERSION": "1.1.1",
@@ -82,7 +83,9 @@ def _get_map(base_url: str, layer: str, bbox: str, srs: str, width: int, height:
     resp.raise_for_status()
     ctype = resp.headers.get("content-type", "")
     if "image" not in ctype:
-        raise RuntimeError(f"Expected an image response for {layer}, got {ctype}: {resp.text[:300]}")
+        raise RuntimeError(
+            f"Expected an image response for {layer}, got {ctype}: {resp.text[:300]}"
+        )
     return resp.content
 
 
@@ -90,14 +93,18 @@ def _save_webp(jpeg_bytes: bytes, out_path: Path, quality: int = 82) -> None:
     img = Image.open(__import__("io").BytesIO(jpeg_bytes)).convert("RGB")
     img.save(out_path, "WEBP", quality=quality)
     size_kb = out_path.stat().st_size / 1024
-    print(f"  wrote {out_path.relative_to(settings.PROJECT_ROOT)}  ({img.width}x{img.height}, {size_kb:.0f} KB)")
+    print(
+        f"  wrote {out_path.relative_to(settings.PROJECT_ROOT)}  ({img.width}x{img.height}, {size_kb:.0f} KB)"
+    )
 
 
 def fetch_globe_textures() -> None:
     print("Fetching whole-globe equirectangular textures (for the 3D globe hero)...")
     day = _get_map(GIBS_4326, DAY_LAYER, "-180,-90,180,90", "EPSG:4326", 4096, 2048)
     _save_webp(day, OUT_DIR / "earth_day.webp")
-    night = _get_map(GIBS_4326, NIGHT_LAYER, "-180,-90,180,90", "EPSG:4326", 4096, 2048, time=NIGHT_TIME)
+    night = _get_map(
+        GIBS_4326, NIGHT_LAYER, "-180,-90,180,90", "EPSG:4326", 4096, 2048, time=NIGHT_TIME
+    )
     _save_webp(night, OUT_DIR / "earth_night.webp")
 
 
@@ -107,7 +114,9 @@ def fetch_europe_crop() -> None:
     bbox = f"{x0},{y0},{x1},{y1}"
     day = _get_map(GIBS_3857, DAY_LAYER, bbox, "EPSG:3857", EUROPE_WIDTH_PX, height)
     _save_webp(day, OUT_DIR / "europe_day.webp")
-    night = _get_map(GIBS_3857, NIGHT_LAYER, bbox, "EPSG:3857", EUROPE_WIDTH_PX, height, time=NIGHT_TIME)
+    night = _get_map(
+        GIBS_3857, NIGHT_LAYER, bbox, "EPSG:3857", EUROPE_WIDTH_PX, height, time=NIGHT_TIME
+    )
     _save_webp(night, OUT_DIR / "europe_night.webp")
 
 

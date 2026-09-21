@@ -23,22 +23,30 @@ def _load_long_csv(path: Path, *, key_col: str, value_col: str) -> dict[str, dic
 
 def load_national_property_index() -> dict[str, dict[int, float]]:
     """Country -> {year: index_value}, from `national_property_index.csv`."""
-    return _load_long_csv(RAW_DIR / "national_property_index.csv", key_col="country", value_col="index_value")
+    return _load_long_csv(
+        RAW_DIR / "national_property_index.csv", key_col="country", value_col="index_value"
+    )
 
 
 def load_national_inflation_index() -> dict[str, dict[int, float]]:
     """Country -> {year: cpi_value}, from `national_inflation_index.csv`."""
-    return _load_long_csv(RAW_DIR / "national_inflation_index.csv", key_col="country", value_col="cpi_value")
+    return _load_long_csv(
+        RAW_DIR / "national_inflation_index.csv", key_col="country", value_col="cpi_value"
+    )
 
 
 def load_national_income_index() -> dict[str, dict[int, float]]:
     """Country -> {year: index_value}, from `national_income_index.csv`."""
-    return _load_long_csv(RAW_DIR / "national_income_index.csv", key_col="country", value_col="index_value")
+    return _load_long_csv(
+        RAW_DIR / "national_income_index.csv", key_col="country", value_col="index_value"
+    )
 
 
 def load_city_property_index() -> dict[str, dict[int, float]]:
     """City -> {year: index_value}, from `city_property_index.csv`."""
-    return _load_long_csv(RAW_DIR / "city_property_index.csv", key_col="city", value_col="index_value")
+    return _load_long_csv(
+        RAW_DIR / "city_property_index.csv", key_col="city", value_col="index_value"
+    )
 
 
 def load_city_rental_per_sqm() -> dict[str, dict[int, float]]:

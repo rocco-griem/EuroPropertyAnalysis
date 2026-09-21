@@ -108,27 +108,50 @@ def load_real_raw_data(session: Session) -> None:
     for place in PLACES:
         city = get_city_by_name(session, place.city)
         if city is None:
-            raise ValueError(f"City {place.city!r} not seeded — run seed_countries_and_cities() first.")
+            raise ValueError(
+                f"City {place.city!r} not seeded — run seed_countries_and_cities() first."
+            )
         country = city.country
 
         for year, value in national_property[place.country].items():
-            upsert_property_index(session, country=country, year=year, index_value=value, source=property_source)
+            upsert_property_index(
+                session, country=country, year=year, index_value=value, source=property_source
+            )
         for year, value in city_property[place.city].items():
             upsert_property_index(
-                session, country=country, city=city, year=year, index_value=value, source=city_source
+                session,
+                country=country,
+                city=city,
+                year=year,
+                index_value=value,
+                source=city_source,
             )
         for year, value in national_inflation[place.country].items():
-            upsert_inflation_index(session, country=country, year=year, cpi_value=value, source=inflation_source)
+            upsert_inflation_index(
+                session, country=country, year=year, cpi_value=value, source=inflation_source
+            )
         for year, value in national_income[place.country].items():
-            upsert_income_index(session, country=country, year=year, index_value=value, source=income_source)
+            upsert_income_index(
+                session, country=country, year=year, index_value=value, source=income_source
+            )
         for year, value in city_rental.get(place.city, {}).items():
             upsert_rental_price(
-                session, country=country, city=city, year=year, rental_eur_sqm=value, source=rental_source
+                session,
+                country=country,
+                city=city,
+                year=year,
+                rental_eur_sqm=value,
+                source=rental_source,
             )
         for (year, quarter), value in city_property_quarterly.get(place.city, {}).items():
             upsert_property_index_quarterly(
-                session, country=country, city=city, year=year, quarter=quarter,
-                eur_per_sqm=value, source=quarterly_source,
+                session,
+                country=country,
+                city=city,
+                year=year,
+                quarter=quarter,
+                eur_per_sqm=value,
+                source=quarterly_source,
             )
 
 

@@ -34,10 +34,21 @@ def session():
 
 
 def _seed_city(
-    session, *, country_name, iso_code, city_name, city_values, national_values, cpi_values, income_values, years,
+    session,
+    *,
+    country_name,
+    iso_code,
+    city_name,
+    city_values,
+    national_values,
+    cpi_values,
+    income_values,
+    years,
     place_type="capital",
 ):
-    country = get_or_create_country(session, name=country_name, iso_code=iso_code, currency_code="EUR")
+    country = get_or_create_country(
+        session, name=country_name, iso_code=iso_code, currency_code="EUR"
+    )
     city = get_or_create_city(session, name=city_name, country=country, place_type=place_type)
     for year, value in zip(years, city_values):
         upsert_property_index(session, country=country, city=city, year=year, index_value=value)
@@ -224,8 +235,12 @@ class TestGetQuarterlyPropertyIndex:
     def test_returns_quarterly_rows_for_named_city(self, session):
         country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
         city = get_or_create_city(session, name="Palma", country=country)
-        upsert_property_index_quarterly(session, country=country, city=city, year=2015, quarter=1, eur_per_sqm=1000.0)
-        upsert_property_index_quarterly(session, country=country, city=city, year=2015, quarter=2, eur_per_sqm=1010.0)
+        upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=1, eur_per_sqm=1000.0
+        )
+        upsert_property_index_quarterly(
+            session, country=country, city=city, year=2015, quarter=2, eur_per_sqm=1010.0
+        )
 
         df = get_quarterly_property_index(session, city_names=["Palma"])
 

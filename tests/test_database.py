@@ -84,7 +84,9 @@ class TestCountryAndCity:
 
     def test_set_city_parent(self, session):
         country = get_or_create_country(session, name="Spain", iso_code="ES", currency_code="EUR")
-        mallorca = get_or_create_city(session, name="Mallorca", country=country, place_type="island")
+        mallorca = get_or_create_city(
+            session, name="Mallorca", country=country, place_type="island"
+        )
         palma = get_or_create_city(session, name="Palma", country=country, place_type="city")
 
         set_city_parent(session, city=palma, parent=mallorca)
@@ -94,7 +96,9 @@ class TestCountryAndCity:
 
 class TestDataSource:
     def test_get_or_create_data_source_is_idempotent(self, session):
-        first = get_or_create_data_source(session, name="Eurostat prc_hpi_a", url="https://ec.europa.eu")
+        first = get_or_create_data_source(
+            session, name="Eurostat prc_hpi_a", url="https://ec.europa.eu"
+        )
         second = get_or_create_data_source(session, name="Eurostat prc_hpi_a")
 
         assert first.id == second.id
@@ -105,7 +109,9 @@ class TestPropertyIndexUpsert:
         country = get_or_create_country(session, name="France", iso_code="FR", currency_code="EUR")
         city = get_or_create_city(session, name="Paris", country=country)
 
-        row = upsert_property_index(session, country=country, city=city, year=2015, index_value=100.0)
+        row = upsert_property_index(
+            session, country=country, city=city, year=2015, index_value=100.0
+        )
 
         assert row.city_id == city.id
         assert row.index_value == pytest.approx(100.0)
@@ -216,7 +222,9 @@ class TestComputedMetricsUpsert:
         city = get_or_create_city(session, name="Paris", country=country)
 
         upsert_summary_metric(session, city=city, start_year=2015, end_year=2024, cagr_pct=4.0)
-        row = upsert_summary_metric(session, city=city, start_year=2015, end_year=2024, cagr_pct=4.8)
+        row = upsert_summary_metric(
+            session, city=city, start_year=2015, end_year=2024, cagr_pct=4.8
+        )
 
         assert row.cagr_pct == pytest.approx(4.8)
         assert session.scalars(select(SummaryMetric)).all() == [row]

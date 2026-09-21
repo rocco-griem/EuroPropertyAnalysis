@@ -7,7 +7,12 @@ from __future__ import annotations
 
 from src.config.settings import PLACES
 from src.database.connection import get_session, init_db
-from src.database.repository import get_city_by_name, get_or_create_city, get_or_create_country, set_city_parent
+from src.database.repository import (
+    get_city_by_name,
+    get_or_create_city,
+    get_or_create_country,
+    set_city_parent,
+)
 
 
 def seed_countries_and_cities() -> None:
@@ -36,7 +41,9 @@ def seed_countries_and_cities() -> None:
             city = get_city_by_name(session, place.city)
             parent = get_city_by_name(session, place.parent)
             if parent is None:
-                raise ValueError(f"{place.city!r} declares parent {place.parent!r}, which is not in PLACES.")
+                raise ValueError(
+                    f"{place.city!r} declares parent {place.parent!r}, which is not in PLACES."
+                )
             set_city_parent(session, city=city, parent=parent)
 
 

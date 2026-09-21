@@ -58,7 +58,7 @@ class Place:
 
     city: str
     country: str
-    iso_code: str       # ISO 3166-1 alpha-2 (matches Eurostat geo codes; UK uses "UK")
+    iso_code: str  # ISO 3166-1 alpha-2 (matches Eurostat geo codes; UK uses "UK")
     currency_code: str  # ISO 4217
     # "capital" (national capital, the Version 1 set) | "city" (a non-capital city added later,
     # e.g. Palma) | "island" (a region/island-level place used only for deep-dive comparison,

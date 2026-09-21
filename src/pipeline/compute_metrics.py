@@ -118,7 +118,9 @@ def compute_city_metrics(session: Session, city: City) -> None:
         volatility_value = volatility(yoy)
         summary_kwargs["volatility_pct"] = volatility_value * 100
         if volatility_value != 0:
-            summary_kwargs["risk_adjusted_return"] = risk_adjusted_return(cagr_value, volatility_value)
+            summary_kwargs["risk_adjusted_return"] = risk_adjusted_return(
+                cagr_value, volatility_value
+            )
 
     # Rent: latest available level + whole-period CAGR over the rental years actually present
     # (independent of the property years, and only when there are >= 2 years and a positive base).

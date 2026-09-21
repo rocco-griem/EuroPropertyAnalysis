@@ -122,7 +122,9 @@ def upsert_property_index(
         )
     )
     if row is None:
-        row = PropertyIndex(country=country, city=city, year=year, index_value=index_value, source=source)
+        row = PropertyIndex(
+            country=country, city=city, year=year, index_value=index_value, source=source
+        )
         session.add(row)
     else:
         row.index_value = index_value
@@ -150,8 +152,12 @@ def upsert_property_index_quarterly(
     )
     if row is None:
         row = PropertyIndexQuarterly(
-            country=country, city=city, year=year, quarter=quarter,
-            eur_per_sqm=eur_per_sqm, source=source,
+            country=country,
+            city=city,
+            year=year,
+            quarter=quarter,
+            eur_per_sqm=eur_per_sqm,
+            source=source,
         )
         session.add(row)
     else:
@@ -194,7 +200,9 @@ def upsert_inflation_index(
     source: DataSource | None = None,
 ) -> InflationIndex:
     row = session.scalar(
-        select(InflationIndex).where(InflationIndex.country_id == country.id, InflationIndex.year == year)
+        select(InflationIndex).where(
+            InflationIndex.country_id == country.id, InflationIndex.year == year
+        )
     )
     if row is None:
         row = InflationIndex(country=country, year=year, cpi_value=cpi_value, source=source)

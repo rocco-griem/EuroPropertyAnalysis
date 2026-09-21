@@ -26,7 +26,9 @@ theme.page_header(
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)
     all_cities = summary_df["city"].tolist()
-    selected_cities = st.multiselect("Cities to compare", options=all_cities, default=all_cities[:2])
+    selected_cities = st.multiselect(
+        "Cities to compare", options=all_cities, default=all_cities[:2]
+    )
     annual_df = analytics.get_annual_metrics(session, city_names=selected_cities or None)
 
 selected_summary_df = summary_df[summary_df["city"].isin(selected_cities)]

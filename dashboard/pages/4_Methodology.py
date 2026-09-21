@@ -23,7 +23,9 @@ theme.page_header("Methodology", accent_word="Methodology")
 with get_session() as session:
     summary_df = analytics.get_summary_table(session)
 
-current_cities = ", ".join(sorted(summary_df["city"])) if not summary_df.empty else "none loaded yet"
+current_cities = (
+    ", ".join(sorted(summary_df["city"])) if not summary_df.empty else "none loaded yet"
+)
 
 st.markdown(
     f"""

@@ -41,7 +41,9 @@ class TestLoadNationalSeries:
         ):
             series = loader()
             for country, values in series.items():
-                assert sorted(values) == _EXPECTED_YEARS, f"{country} missing years in {loader.__name__}"
+                assert sorted(values) == _EXPECTED_YEARS, (
+                    f"{country} missing years in {loader.__name__}"
+                )
 
     def test_values_are_positive(self):
         series = load_national_property_index()

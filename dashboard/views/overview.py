@@ -33,8 +33,11 @@ theme.page_header(
 # of the same NASA satellite imagery — a flat Web-Mercator map and a 3D rotating globe — sit
 # behind a toggle so both can be compared with real data around them before picking one.
 hero_choice = st.radio(
-    "Hero visual", ["Flat map", "Globe"], horizontal=True,
-    key="hero_choice", label_visibility="collapsed",
+    "Hero visual",
+    ["Flat map", "Globe"],
+    horizontal=True,
+    key="hero_choice",
+    label_visibility="collapsed",
 )
 if hero_choice == "Globe":
     components.html(hero_globe.render(), height=560, scrolling=False)

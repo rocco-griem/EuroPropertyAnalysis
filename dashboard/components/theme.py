@@ -27,13 +27,13 @@ from src.config import settings
 # --- Core tokens -----------------------------------------------------------------------------
 PAGE_ICON = "🏙️"
 
-BACKGROUND = "#0B0E14"       # main plane (matches config.toml backgroundColor)
-SURFACE = "#161B26"          # cards / widgets / sidebar
-SURFACE_RAISED = "#1C2230"   # hover / raised card
-ACCENT = "#E8833A"           # warm amber/terracotta
-ACCENT_LIGHT = "#F2A65A"     # hover / highlight
-TEXT = "#E6E9EF"             # primary ink
-TEXT_MUTED = "#8A93A6"       # captions / labels
+BACKGROUND = "#0B0E14"  # main plane (matches config.toml backgroundColor)
+SURFACE = "#161B26"  # cards / widgets / sidebar
+SURFACE_RAISED = "#1C2230"  # hover / raised card
+ACCENT = "#E8833A"  # warm amber/terracotta
+ACCENT_LIGHT = "#F2A65A"  # hover / highlight
+TEXT = "#E6E9EF"  # primary ink
+TEXT_MUTED = "#8A93A6"  # captions / labels
 BORDER = "rgba(255,255,255,0.07)"
 GRID = "#212838"
 AXIS = "#2E3646"
@@ -76,7 +76,15 @@ FONT_FAMILY = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
 # place added later — regardless of where it sorts alphabetically — is appended after them
 # rather than potentially inserted in the middle, which would shift and repaint existing cities.
 _ORIGINAL_9_CAPITALS = [
-    "Amsterdam", "Berlin", "Budapest", "London", "Madrid", "Paris", "Prague", "Vienna", "Warsaw",
+    "Amsterdam",
+    "Berlin",
+    "Budapest",
+    "London",
+    "Madrid",
+    "Paris",
+    "Prague",
+    "Vienna",
+    "Warsaw",
 ]
 _all_places = sorted(p.city for p in settings.PLACES)
 CANONICAL_CITIES = _ORIGINAL_9_CAPITALS + [
@@ -109,15 +117,22 @@ _TEMPLATE.layout = go.Layout(
     margin=dict(l=10, r=20, t=30, b=10),
     colorway=CITY_COLORS,
     xaxis=dict(
-        gridcolor=GRID, zerolinecolor=AXIS, linecolor=AXIS,
-        tickfont=dict(color=TEXT_MUTED), title=dict(font=dict(color=TEXT_MUTED)),
+        gridcolor=GRID,
+        zerolinecolor=AXIS,
+        linecolor=AXIS,
+        tickfont=dict(color=TEXT_MUTED),
+        title=dict(font=dict(color=TEXT_MUTED)),
     ),
     yaxis=dict(
-        gridcolor=GRID, zerolinecolor=AXIS, linecolor=AXIS,
-        tickfont=dict(color=TEXT_MUTED), title=dict(font=dict(color=TEXT_MUTED)),
+        gridcolor=GRID,
+        zerolinecolor=AXIS,
+        linecolor=AXIS,
+        tickfont=dict(color=TEXT_MUTED),
+        title=dict(font=dict(color=TEXT_MUTED)),
     ),
     legend=dict(
-        bgcolor="rgba(0,0,0,0)", font=dict(color=TEXT_MUTED),
+        bgcolor="rgba(0,0,0,0)",
+        font=dict(color=TEXT_MUTED),
         title=dict(font=dict(color=TEXT_MUTED)),
     ),
     hoverlabel=dict(bgcolor=SURFACE, bordercolor=BORDER, font=dict(color=TEXT, family=FONT_FAMILY)),
