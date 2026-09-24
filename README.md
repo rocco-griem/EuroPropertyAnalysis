@@ -4,7 +4,7 @@
 
 A Python analytics project comparing residential property market performance across nine European
 capital cities — plus Palma — from **2015 to 2024**, benchmarked against each country's wider
-national housing market — built end to end from raw statistical-office data to a live dashboard.
+national housing market — built end to end from raw statistical-office data to an interactive dashboard.
 A dedicated deep-dive page adds Mallorca (the island) alongside Palma for a closer look.
 
 ## The question it answers
@@ -13,11 +13,10 @@ How have European capital-city property markets performed since 2015, and how do
 with their wider national housing markets — in nominal terms, after inflation, and on a
 risk-adjusted basis?
 
-## Live dashboard
+## Running the dashboard
 
-**Live demo:** <LINK>
-
-Or run it locally — see "How to run locally" below.
+The dashboard runs locally — see "How to run locally" below. It builds its own database
+from the committed CSVs on first load, so no setup beyond installing the dependencies.
 
 ## Dashboard preview
 
