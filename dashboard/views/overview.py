@@ -12,9 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 import streamlit.components.v1 as components
-
 from components import charts, hero_globe, hero_map, metric_cards, theme
 from components.bootstrap import ensure_database
+
 from src.database.connection import get_session
 from src.services import analytics
 

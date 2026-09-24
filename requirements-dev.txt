@@ -5,7 +5,7 @@
 -r requirements.txt
 
 pytest>=8.0
-ruff>=0.4
+ruff==0.15.20
 jupyter>=1.0
 matplotlib>=3.8      # optional, exploration notebooks only
 requests>=2.31       # used by src/tools/fetch_map_imagery.py (NASA GIBS hero imagery fetch)

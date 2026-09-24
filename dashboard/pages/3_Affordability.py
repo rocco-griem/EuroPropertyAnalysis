@@ -8,9 +8,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
-
 from components import charts, theme
 from components.bootstrap import ensure_database
+
 from src.database.connection import get_session
 from src.services import analytics
 

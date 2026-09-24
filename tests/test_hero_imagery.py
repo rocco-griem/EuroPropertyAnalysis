@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "dashboard"))
 
 from components import hero_assets, hero_globe, hero_map  # noqa: E402
+
 from src.config import settings  # noqa: E402
 
 _STATIC_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "static"
